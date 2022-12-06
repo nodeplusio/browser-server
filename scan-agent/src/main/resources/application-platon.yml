@@ -6,16 +6,18 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://192.168.9.191:3306/scan_${profile}?useUnicode=true&characterEncoding=utf-8&useSSL=false&useTimezone=true&serverTimezone=GMT%2B8&allowMultiQueries=true
-    username: ENC(bpshgjWOgn2d+oGmSTBPNA==)
-    password: ENC(bpshgjWOgn2d+oGmSTBPNA==)
+    url: jdbc:mysql://52.220.99.128:3306/scan_${profile}?useUnicode=true&characterEncoding=utf-8&useSSL=false&useTimezone=true&serverTimezone=GMT%2B8&allowMultiQueries=true
+    username: platon_test
+    password: vhZ9BdFuu2sx
   #Redis键配置
   redis:
-    password: ENC(D4K/Kxv2c2MT7FaaT+ZHQswHs8KvRm6N)
+#    password: ENC(D4K/Kxv2c2MT7FaaT+ZHQswHs8KvRm6N)
+    host: 52.220.99.128
+    port: 6379
     database: 0
-    cluster:
-      max-redirects: 3
-      nodes: 192.168.9.191:7001,192.168.9.191:7002,192.168.9.191:7003,192.168.9.191:7004,192.168.9.191:7005,192.168.9.191:7006
+#    cluster:
+#      max-redirects: 3
+#      nodes: 192.168.9.191:7001,192.168.9.191:7002,192.168.9.191:7003,192.168.9.191:7004,192.168.9.191:7005,192.168.9.191:7006
     key:
       #最多存储多少条数据
       max-item: 500000
@@ -36,7 +38,7 @@ spring:
   #ES索引配置
   elasticsearch:
     high-level-client:
-      hosts: 192.168.120.103,192.168.120.104,192.168.120.105
+      hosts: 52.220.99.128
       port: 9200
       schema: http
       username: ENC(VME69JEYLfmUXi3KuDQTWA==)
@@ -76,6 +78,7 @@ disruptor:
 logging:
   #日志级别
   level:
+    root: debug
     org.springframework: info
     org.springframework.retry: info
     com.platon.browser: info
@@ -90,6 +93,12 @@ logging:
     com.platon.browser.persistence.handler: info
     com.platon.browser.persistence.queue.handler: info
     com.platon.browser.task: info
+    sun:
+      rmi: info
+    javax:
+      management:
+        remote:
+          rmi: info
 #PlatOn相关配置
 platon:
   # 地址HRP前缀
@@ -101,8 +110,12 @@ platon:
   # Web3j访问地址
   web3j:
     #HTTP或WS
-    protocol: WS
-    addresses: 192.168.9.139:7789
+    protocol: HTTP
+    #    protocol: WS
+#    addresses: 128.199.230.78:6789
+    addresses: 18.138.163.64:6789
+#    addresses: openapi2.platon.network/rpc
+#    addresses: devnet2openapi.platon.network/rpc
   # 质押节点统计年化率最多取多少个连续周期
   maxSettlePeriodCount4AnnualizedRateStat: 4
   #PlatON初始总发行量(LAT)
@@ -174,15 +187,17 @@ xxl:
   job:
     admin:
       #调度中心部署跟地址
-      addresses: http://10.0.0.34:8060/xxl-job-admin
+      addresses: https://test.figo.network/xxl-job-admin/
     #调度中心通讯TOKEN
-    accessToken: ENC(IZf5O7X2oiVstkwHNZUxEhPzDKInPh0TexHqj7b4YY39c10DzZaDqqQYWoSw8l2q)
+#    accessToken: ENC(IZf5O7X2oiVstkwHNZUxEhPzDKInPh0TexHqj7b4YY39c10DzZaDqqQYWoSw8l2q)
+    accessToken:
     #调度中心日志文件保存天数
     logretentiondays: 90
     executor:
       #执行器AppName
       appname: platon-scan-agent
-      ip: 192.168.21.114
+#      ip: 192.168.21.114
+      ip:
       #执行器端口号
       port: 9999
       #执行器运行日志文件存储磁盘路径

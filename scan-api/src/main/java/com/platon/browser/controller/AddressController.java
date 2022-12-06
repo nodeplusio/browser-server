@@ -2,9 +2,11 @@ package com.platon.browser.controller;
 
 import com.platon.browser.enums.I18nEnum;
 import com.platon.browser.enums.RetEnum;
+import com.platon.browser.request.PageReq;
 import com.platon.browser.request.address.QueryDetailRequest;
 import com.platon.browser.request.address.QueryRPPlanDetailRequest;
 import com.platon.browser.response.BaseResp;
+import com.platon.browser.response.address.QueryAddressValueResp;
 import com.platon.browser.response.address.QueryDetailResp;
 import com.platon.browser.response.address.QueryRPPlanDetailResp;
 import com.platon.browser.service.AddressService;
@@ -62,6 +64,28 @@ public class AddressController {
     public Mono<BaseResp<QueryRPPlanDetailResp>> rpplanDetail(@Valid @RequestBody QueryRPPlanDetailRequest req) {
         return Mono.create(sink -> {
             QueryRPPlanDetailResp resp = addressService.rpplanDetail(req);
+            sink.success(BaseResp.build(RetEnum.RET_SUCCESS.getCode(), i18n.i(I18nEnum.SUCCESS), resp));
+        });
+    }
+
+    /**
+     * 1.1 地址列表按余额大小排序
+     *
+     * @param req
+     * @return reactor.core.publisher.Mono<com.platon.browser.response.BaseResp < com.platon.browser.response.address.QueryAddressValueResp>>
+     */
+    @PostMapping("address/addressvalue")
+    public Mono<BaseResp<QueryAddressValueResp>> addressvalue(@Valid @RequestBody PageReq req) {
+        return Mono.create(sink -> {
+            QueryAddressValueResp resp = new QueryAddressValueResp();
+            sink.success(BaseResp.build(RetEnum.RET_SUCCESS.getCode(), i18n.i(I18nEnum.SUCCESS), resp));
+        });
+    }
+
+    @PostMapping("address/addressValueAllCols")
+    public Mono<BaseResp<QueryAddressValueResp>> addressValueAllCols(@Valid @RequestBody PageReq req) {
+        return Mono.create(sink -> {
+            QueryAddressValueResp resp = new QueryAddressValueResp();
             sink.success(BaseResp.build(RetEnum.RET_SUCCESS.getCode(), i18n.i(I18nEnum.SUCCESS), resp));
         });
     }
