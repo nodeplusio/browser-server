@@ -115,7 +115,37 @@
       order by ${orderByClause}
     </if>
   </select>
+  <select id="pageByExampleWithBLOBs" parameterType="com.platon.browser.dao.entity.AddressExample" resultMap="ResultMapWithBLOBs">
+    select
+    <if test="distinct">
+      distinct
+    </if>
+    <include refid="Base_Column_List" />
+    ,
+    <include refid="Blob_Column_List" />
+    from address
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null">
+      order by ${orderByClause}
+    </if>
+  </select>
   <select id="selectByExample" parameterType="com.platon.browser.dao.entity.AddressExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">
+      distinct
+    </if>
+    <include refid="Base_Column_List" />
+    from address
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null">
+      order by ${orderByClause}
+    </if>
+  </select>
+  <select id="pageByExample" parameterType="com.platon.browser.dao.entity.AddressExample" resultMap="BaseResultMap">
     select
     <if test="distinct">
       distinct

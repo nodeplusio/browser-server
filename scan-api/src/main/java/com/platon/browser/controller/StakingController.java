@@ -10,6 +10,7 @@ import com.platon.browser.service.StakingService;
 import com.platon.browser.utils.I18nUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -134,6 +135,36 @@ public class StakingController {
     @PostMapping("staking/lockedStakingList")
     public Mono<RespPage<LockedStakingListResp>> lockedStakingList(@Valid @RequestBody LockedStakingListReq req) {
         return Mono.just(stakingService.lockedStakingList(req));
+    }
+
+    /**
+     * 2.2.1 节点历史出块数
+     * @param nodeid
+     * @return
+     */
+    @GetMapping("v2/staking/getBlockCountHistoryByNode")
+    public Mono<RespPage<BlockCountHistoryByNodeResp>> getBlockCountHistoryByNode(String nodeid) {
+        return Mono.just(stakingService.getBlockCountHistoryByNode(nodeid));
+    }
+
+    /**
+     * 2.2.1 节点历史年化率
+     * @param nodeid
+     * @return
+     */
+    @GetMapping("v2/staking/getDeleAnnualizedRateHistoryByNode")
+    public Mono<RespPage<DeleAnnualizedRateHistoryByNodeResult>> getDeleAnnualizedRateHistoryByNode(String nodeid) {
+        return Mono.just(stakingService.getDeleAnnualizedRateHistoryByNode(nodeid));
+    }
+
+    /**
+     * 2.2.1 节点历史总质押和总委托
+     * @param nodeid
+     * @return
+     */
+    @GetMapping("v2/staking/getTotalValueHistoryByNode")
+    public Mono<RespPage<TotalValueHistoryByNodeResultDetail>> getTotalValueHistoryByNode(String nodeid) {
+        return Mono.just(stakingService.getTotalValueHistoryByNode(nodeid));
     }
 
 }

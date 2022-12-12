@@ -14,9 +14,7 @@ import com.platon.browser.dao.custommapper.CustomDelegationMapper;
 import com.platon.browser.dao.custommapper.CustomNodeMapper;
 import com.platon.browser.dao.custommapper.CustomVoteMapper;
 import com.platon.browser.dao.entity.*;
-import com.platon.browser.dao.mapper.AddressMapper;
-import com.platon.browser.dao.mapper.NodeMapper;
-import com.platon.browser.dao.mapper.ProposalMapper;
+import com.platon.browser.dao.mapper.*;
 import com.platon.browser.elasticsearch.dto.NodeOpt;
 import com.platon.browser.enums.AddressTypeEnum;
 import com.platon.browser.enums.I18nEnum;
@@ -26,6 +24,7 @@ import com.platon.browser.request.staking.*;
 import com.platon.browser.response.BaseResp;
 import com.platon.browser.response.RespPage;
 import com.platon.browser.response.staking.*;
+import com.platon.browser.service.elasticsearch.EsBlockRepository;
 import com.platon.browser.service.elasticsearch.EsNodeOptRepository;
 import com.platon.browser.service.elasticsearch.bean.ESResult;
 import com.platon.browser.service.elasticsearch.query.ESQueryBuilderConstructor;
@@ -33,6 +32,12 @@ import com.platon.browser.service.elasticsearch.query.ESQueryBuilders;
 import com.platon.browser.utils.*;
 import com.platon.contracts.ppos.dto.resp.Reward;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramInterval;
+import org.elasticsearch.search.aggregations.bucket.histogram.ParsedDateHistogram;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -45,6 +50,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 验证人模块方法
@@ -75,7 +81,10 @@ public class StakingService {
     private NodeMapper nodeMapper;
 
     @Resource
-    private EsNodeOptRepository ESNodeOptRepository;
+    private EsNodeOptRepository esNodeOptRepository;
+
+    @Resource
+    private EsBlockRepository esBlockRepository;
 
     @Resource
     private I18nUtil i18n;
@@ -93,6 +102,10 @@ public class StakingService {
     private AddressMapper addressMapper;
     @Resource
     private ProposalMapper proposalMapper;
+    @Resource
+    private NodeHistoryTotalAndStatDelegateValueMapper nodeHistoryTotalAndStatDelegateValueMapper;
+    @Resource
+    private NodeHistoryDeleAnnualizedRateMapper nodeHistoryDeleAnnualizedRateMapper;
 
     public StakingStatisticNewResp stakingStatisticNew() {
         /** 获取统计信息 */
@@ -398,7 +411,7 @@ public class StakingService {
         ESResult<NodeOpt> items = new ESResult<>();
         constructor.setDesc("id");
         try {
-            items = ESNodeOptRepository.search(constructor, NodeOpt.class, req.getPageNo(), req.getPageSize());
+            items = esNodeOptRepository.search(constructor, NodeOpt.class, req.getPageNo(), req.getPageSize());
         } catch (Exception e) {
             logger.error("获取节点操作错误。", e);
             return respPage;
@@ -641,4 +654,46 @@ public class StakingService {
         return respPage;
     }
 
+    public RespPage<BlockCountHistoryByNodeResp> getBlockCountHistoryByNode(String nodeid) {
+        RespPage<BlockCountHistoryByNodeResp> result = new RespPage<>();
+        String aggregationName = "by_day";
+        DateHistogramAggregationBuilder byDay =
+                AggregationBuilders.dateHistogram(aggregationName).calendarInterval(DateHistogramInterval.DAY).field("time");
+
+        ESQueryBuilderConstructor constructor = new ESQueryBuilderConstructor();
+        ESQueryBuilders esQueryBuilders = new ESQueryBuilders().term("nodeId", nodeid)
+                .range("time", "now-330d", "now");
+        constructor.must(esQueryBuilders);
+        constructor.setAggregation(byDay);
+        try {
+            Aggregations aggregations = esBlockRepository.aggregationSearch(constructor);
+            result.setData(((ParsedDateHistogram) aggregations.get(aggregationName)).getBuckets().stream()
+                    .map(BlockCountHistoryByNodeResp::new)
+                    .collect(Collectors.toList()));
+        } catch (Exception e) {
+            logger.error("查询es出错", e);
+        }
+
+        return result;
+    }
+
+    public RespPage<DeleAnnualizedRateHistoryByNodeResult> getDeleAnnualizedRateHistoryByNode(String nodeid) {
+        NodeHistoryDeleAnnualizedRateExample example = new NodeHistoryDeleAnnualizedRateExample();
+        NodeHistoryDeleAnnualizedRateExample.Criteria criteria = example.createCriteria();
+        criteria.andNodeIdEqualTo(nodeid).andDateGreaterThan(DateUtils.addDays(new Date(), -30));
+        List<NodeHistoryDeleAnnualizedRate> list = nodeHistoryDeleAnnualizedRateMapper.selectByExample(example);
+        RespPage<DeleAnnualizedRateHistoryByNodeResult> result = new RespPage<>();
+        result.setData(list.stream().map(DeleAnnualizedRateHistoryByNodeResult::new).collect(Collectors.toList()));
+        return result;
+    }
+
+    public RespPage<TotalValueHistoryByNodeResultDetail> getTotalValueHistoryByNode(String nodeid) {
+        NodeHistoryTotalAndStatDelegateValueExample example = new NodeHistoryTotalAndStatDelegateValueExample();
+        NodeHistoryTotalAndStatDelegateValueExample.Criteria criteria = example.createCriteria();
+        criteria.andNodeIdEqualTo(nodeid).andDateGreaterThan(DateUtils.addDays(new Date(), -30));
+        List<NodeHistoryTotalAndStatDelegateValue> list = nodeHistoryTotalAndStatDelegateValueMapper.selectByExample(example);
+        RespPage<TotalValueHistoryByNodeResultDetail> result = new RespPage<>();
+        result.setData(list.stream().map(TotalValueHistoryByNodeResultDetail::new).collect(Collectors.toList()));
+        return result;
+    }
 }

@@ -61,6 +61,7 @@ spring:
   elasticsearch:
     high-level-client:
       hosts: 52.220.99.128
+#      hosts: localhost
       port: 9200
       schema: http
       username: ENC(VME69JEYLfmUXi3KuDQTWA==)

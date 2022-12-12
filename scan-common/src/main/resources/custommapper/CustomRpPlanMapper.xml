@@ -3,6 +3,13 @@
 <mapper namespace="com.platon.browser.dao.custommapper.CustomRpPlanMapper">
 
   <resultMap id="BaseResultMap" type="com.platon.browser.bean.CustomRpPlan" extends="com.platon.browser.dao.mapper.RpPlanMapper.BaseResultMap"/>
+  <resultMap id="StatsResultMap" type="com.platon.browser.bean.CustomRpPlanStats">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="number" jdbcType="BIGINT" property="number" />
+    <result column="epoch" jdbcType="BIGINT" property="epoch" />
+    <result column="totalAmount" jdbcType="DECIMAL" property="totalAmount" />
+    <result column="totalCount" jdbcType="BIGINT" property="totalCount" />
+  </resultMap>
 
   <!--查询所有节点-->
   <select id="selectAll" resultMap="BaseResultMap">
@@ -12,6 +19,12 @@
     </if>
     <include refid="com.platon.browser.dao.mapper.RpPlanMapper.Base_Column_List" />
     from rp_plan
+  </select>
+
+  <select id="statsAll" resultMap="StatsResultMap">
+    select number, epoch, count(*) totalCount, sum(amount) totalAmount from rp_plan
+    group by number, epoch
+    order by number desc
   </select>
 
   <!--批量选择性插入或更新-->

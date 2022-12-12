@@ -5,6 +5,7 @@ import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
 import com.platon.browser.bean.CustomStaking;
 import com.platon.browser.bean.keybase.KeyBaseUserInfo;
 import com.platon.browser.cache.TransactionCacheDto;
@@ -13,10 +14,7 @@ import com.platon.browser.config.DownFileCommon;
 import com.platon.browser.constant.Browser;
 import com.platon.browser.dao.custommapper.CustomToken1155InventoryMapper;
 import com.platon.browser.dao.entity.*;
-import com.platon.browser.dao.mapper.AddressMapper;
-import com.platon.browser.dao.mapper.ProposalMapper;
-import com.platon.browser.dao.mapper.StakingMapper;
-import com.platon.browser.dao.mapper.TokenInventoryMapper;
+import com.platon.browser.dao.mapper.*;
 import com.platon.browser.elasticsearch.dto.Block;
 import com.platon.browser.elasticsearch.dto.DelegationReward;
 import com.platon.browser.elasticsearch.dto.DelegationReward.Extra;
@@ -36,9 +34,11 @@ import com.platon.browser.request.newtransaction.TransactionDetailsReq;
 import com.platon.browser.request.newtransaction.TransactionListByAddressRequest;
 import com.platon.browser.request.newtransaction.TransactionListByBlockRequest;
 import com.platon.browser.request.staking.QueryClaimByStakingReq;
+import com.platon.browser.request.staking.QueryDelegationLogByNodeIdReq;
 import com.platon.browser.response.RespPage;
 import com.platon.browser.response.account.AccountDownload;
 import com.platon.browser.response.staking.QueryClaimByStakingResp;
+import com.platon.browser.response.staking.TransactionDetail;
 import com.platon.browser.response.transaction.*;
 import com.platon.browser.service.elasticsearch.EsDelegationRewardRepository;
 import com.platon.browser.service.elasticsearch.EsTransactionRepository;
@@ -63,6 +63,7 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 交易方法逻辑实现
@@ -97,6 +98,12 @@ public class TransactionService {
 
     @Resource
     private CustomToken1155InventoryMapper customToken1155InventoryMapper;
+
+    @Resource
+    private TxBakMapper txBakMapper;
+
+    @Resource
+    private DelegationLogMapper delegationLogMapper;
 
     @Resource
     private StatisticCacheService statisticCacheService;
@@ -1032,4 +1039,25 @@ public class TransactionService {
         return result;
     }
 
+    public RespPage<TransactionDetail> queryDelegationLogByNodeId(QueryDelegationLogByNodeIdReq req) {
+        DelegationLogExample example = new DelegationLogExample();
+        example.setOrderByClause("time");
+        DelegationLogExample.Criteria criteria = example.createCriteria()
+                .andNodeIdEqualTo(req.getNodeId());
+        if (req.getType() != null) {
+            criteria.andTypeEqualTo(req.getType());
+        }
+        PageHelper.startPage(req.getPageNo(), req.getPageSize());
+        Page<DelegationLog> delegationLogs = delegationLogMapper.selectByExample(example);
+        RespPage<TransactionDetail> result = new RespPage<>();
+        if (delegationLogs.isEmpty()) {
+            return result;
+        }
+
+        TxBakExample txBakExample = new TxBakExample();
+        txBakExample.createCriteria().andIdIn(delegationLogs.stream().map(DelegationLog::getId).collect(Collectors.toList()));
+        List<TxBakWithBLOBs> txBakWithBLOBs = txBakMapper.selectByExampleWithBLOBs(txBakExample);
+        result.init(delegationLogs, txBakWithBLOBs.stream().map(TransactionDetail::new).collect(Collectors.toList()));
+        return result;
+    }
 }

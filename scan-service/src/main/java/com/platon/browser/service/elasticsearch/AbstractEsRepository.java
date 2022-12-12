@@ -30,6 +30,7 @@ import org.elasticsearch.client.indices.*;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.search.sort.FieldSortBuilder;
@@ -395,6 +396,42 @@ public abstract class AbstractEsRepository {
         log.debug(CONSUME_TIME_TIPS, System.currentTimeMillis() - startTime);
 
         return esResult;
+    }
+
+    public Aggregations aggregationSearch(ESQueryBuilderConstructor constructor) throws IOException {
+        long startTime = System.currentTimeMillis();
+
+        SearchRequest searchRequest = new SearchRequest(getIndexName());
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        //排序
+        if (StringUtils.isNotEmpty(constructor.getAsc())) {
+            FieldSortBuilder fieldSortBuilder = new FieldSortBuilder(constructor.getAsc());
+            fieldSortBuilder.order(SortOrder.ASC);
+            if (StringUtils.isNotEmpty(constructor.getUnmappedType())) {
+                fieldSortBuilder.unmappedType(constructor.getUnmappedType());
+            }
+            searchSourceBuilder.sort(fieldSortBuilder);
+        }
+        if (StringUtils.isNotEmpty(constructor.getDesc())) {
+            FieldSortBuilder fieldSortBuilder = new FieldSortBuilder(constructor.getDesc());
+            fieldSortBuilder.order(SortOrder.DESC);
+            if (StringUtils.isNotEmpty(constructor.getUnmappedType())) {
+                fieldSortBuilder.unmappedType(constructor.getUnmappedType());
+            }
+            searchSourceBuilder.sort(fieldSortBuilder);
+        }
+        //设置查询体
+        searchSourceBuilder.query(constructor.listBuilders());
+        if (constructor.getResult() != null) {
+            searchSourceBuilder.fetchSource(constructor.getResult(), null);
+        }
+        searchSourceBuilder.aggregation(constructor.getAggregation());
+        // 设置SearchSourceBuilder查询属性
+        searchRequest.source(searchSourceBuilder);
+        log.debug("get rs" + searchSourceBuilder.toString());
+        SearchResponse response = client.search(searchRequest, RequestOptions.DEFAULT);
+        log.debug(CONSUME_TIME_TIPS, System.currentTimeMillis() - startTime);
+        return response.getAggregations();
     }
 
     /**

@@ -3,6 +3,7 @@ package com.platon.browser.service.elasticsearch.query;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
@@ -49,6 +50,7 @@ public class ESQueryBuilderConstructor {
     private List<BoolQueryBuilder> queryShouldBuilders = new ArrayList<>();
 
     private String[] result;
+    private AggregationBuilder aggregation;
 
     //构造builder
     public QueryBuilder listBuilders() {
@@ -198,4 +200,11 @@ public class ESQueryBuilderConstructor {
         this.unmappedType = unmappedType;
     }
 
+    public AggregationBuilder getAggregation() {
+        return aggregation;
+    }
+
+    public void setAggregation(AggregationBuilder aggregation) {
+        this.aggregation = aggregation;
+    }
 }

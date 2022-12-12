@@ -2,97 +2,54 @@ package com.platon.browser.response.address;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.platon.browser.config.json.CustomLatSerializer;
+import com.platon.browser.dao.entity.Address;
+import com.platon.browser.dao.entity.RpPlan;
+import lombok.Data;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 查询地址锁仓信息的返回的对象
- *
- * @author zhangrj
- * @file QueryRPPlanDetailResp.java
- * @description
- * @data 2019年8月31日
  */
+@Data
 public class QueryAddressValueResp {
 
     /**
-     * 锁仓余额(单位:ATP)
+     * 地址
      */
-    private BigDecimal restrictingBalance;
+    private String address;
 
     /**
-     * 锁仓质押\委托(单位:ATP)
+     * 余额(单位:VON)
+     */
+    private BigDecimal balance;
+
+    /**
+     * 质押的金额(单位:VON)
      */
     private BigDecimal stakingValue;
 
     /**
-     * 欠释放(单位:ATP)
+     * 委托的金额(单位:VON)
      */
-    private BigDecimal underReleaseValue;
+    private BigDecimal delegateValue;
 
     /**
-     * 锁仓计划
+     * 余额+质押的金额+委托的金额(单位:LAT)
      */
-    private List<DetailsRPPlanResp> rpPlans;
-
-    private Long total;
-
-    /**
-     * 总计锁仓
-     */
+    @JsonSerialize(using = CustomLatSerializer.class)
     private BigDecimal totalValue;
 
-    @JsonSerialize(using = CustomLatSerializer.class)
-    public BigDecimal getRestrictingBalance() {
-        return restrictingBalance;
-    }
+    private List<AddressValueRPPlan> RPPlan;
 
-    public void setRestrictingBalance(BigDecimal restrictingBalance) {
-        this.restrictingBalance = restrictingBalance;
+    public QueryAddressValueResp(Address address, List<RpPlan> rpPlans) {
+        this.address = address.getAddress();
+        this.balance = address.getBalance();
+        this.stakingValue = address.getStakingValue();
+        this.delegateValue = address.getDelegateValue();
+        this.totalValue = address.getBalance().add(address.getDelegateValue()).add(address.getStakingValue());
+        this.RPPlan = rpPlans.stream().map(AddressValueRPPlan::new).collect(Collectors.toList());
     }
-
-    @JsonSerialize(using = CustomLatSerializer.class)
-    public BigDecimal getStakingValue() {
-        return stakingValue;
-    }
-
-    public void setStakingValue(BigDecimal stakingValue) {
-        this.stakingValue = stakingValue;
-    }
-
-    @JsonSerialize(using = CustomLatSerializer.class)
-    public BigDecimal getUnderReleaseValue() {
-        return underReleaseValue;
-    }
-
-    public void setUnderReleaseValue(BigDecimal underReleaseValue) {
-        this.underReleaseValue = underReleaseValue;
-    }
-
-    public List<DetailsRPPlanResp> getRpPlans() {
-        return rpPlans;
-    }
-
-    public void setRpPlans(List<DetailsRPPlanResp> rpPlans) {
-        this.rpPlans = rpPlans;
-    }
-
-    public Long getTotal() {
-        return total;
-    }
-
-    public void setTotal(Long total) {
-        this.total = total;
-    }
-
-    @JsonSerialize(using = CustomLatSerializer.class)
-    public BigDecimal getTotalValue() {
-        return totalValue;
-    }
-
-    public void setTotalValue(BigDecimal totalValue) {
-        this.totalValue = totalValue;
-    }
-
 }
