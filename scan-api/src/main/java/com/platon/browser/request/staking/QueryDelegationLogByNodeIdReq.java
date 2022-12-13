@@ -7,11 +7,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
 /**
- * 根据质押的请求对象
- *  @file QueryClaimByStakingReq.java
- *  @description 
- *	@author zhangrj
- *  @data 2019年12月31日
+ * 历史委托列表的请求对象
  */
 @Data
 public class QueryDelegationLogByNodeIdReq extends PageReq {

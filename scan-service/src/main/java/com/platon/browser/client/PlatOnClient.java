@@ -8,7 +8,6 @@ import com.alibaba.fastjson.JSON;
 import com.platon.browser.bean.ReceiptResult;
 import com.platon.browser.exception.BusinessException;
 import com.platon.browser.exception.ConfigLoadingException;
-import com.platon.utils.JSONUtil;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;

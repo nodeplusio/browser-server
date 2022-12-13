@@ -30,7 +30,9 @@ import org.elasticsearch.client.indices.*;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.PipelineAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.search.sort.FieldSortBuilder;
@@ -425,7 +427,12 @@ public abstract class AbstractEsRepository {
         if (constructor.getResult() != null) {
             searchSourceBuilder.fetchSource(constructor.getResult(), null);
         }
-        searchSourceBuilder.aggregation(constructor.getAggregation());
+        for (AggregationBuilder aggregation : constructor.getAggregations()) {
+            searchSourceBuilder.aggregation(aggregation);
+        }
+        for (PipelineAggregationBuilder aggregation : constructor.getPipelineAggregations()) {
+            searchSourceBuilder.aggregation(aggregation);
+        }
         // 设置SearchSourceBuilder查询属性
         searchRequest.source(searchSourceBuilder);
         log.debug("get rs" + searchSourceBuilder.toString());

@@ -1,6 +1,7 @@
 package com.platon.browser.response.staking;
 
 import com.platon.browser.dao.entity.TxBakWithBLOBs;
+import com.platon.browser.elasticsearch.dto.Transaction;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
 
@@ -50,6 +51,10 @@ public class TransactionDetail {
     private String contractAddress;
 
     public TransactionDetail(TxBakWithBLOBs t) {
+        BeanUtils.copyProperties(t, this);
+    }
+
+    public TransactionDetail(Transaction t) {
         BeanUtils.copyProperties(t, this);
     }
 }

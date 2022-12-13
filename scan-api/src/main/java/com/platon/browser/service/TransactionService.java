@@ -35,6 +35,7 @@ import com.platon.browser.request.newtransaction.TransactionListByAddressRequest
 import com.platon.browser.request.newtransaction.TransactionListByBlockRequest;
 import com.platon.browser.request.staking.QueryClaimByStakingReq;
 import com.platon.browser.request.staking.QueryDelegationLogByNodeIdReq;
+import com.platon.browser.request.staking.TransactionListByValueSelectiveReq;
 import com.platon.browser.response.RespPage;
 import com.platon.browser.response.account.AccountDownload;
 import com.platon.browser.response.staking.QueryClaimByStakingResp;
@@ -79,7 +80,7 @@ public class TransactionService {
     private final Logger logger = LoggerFactory.getLogger(TransactionService.class);
 
     @Resource
-    private EsTransactionRepository ESTransactionRepository;
+    private EsTransactionRepository eSTransactionRepository;
 
     @Resource
     private EsDelegationRewardRepository ESDelegationRewardRepository;
@@ -155,7 +156,7 @@ public class TransactionService {
         constructor.setResult(new String[]{"hash", "time", "status", "from", "to", "value", "num", "type", "toType", "cost", "failReason"});
         /** 根据区块号和类型分页查询交易信息 */
         try {
-            items = this.ESTransactionRepository.search(constructor, Transaction.class, req.getPageNo(), req.getPageSize());
+            items = this.eSTransactionRepository.search(constructor, Transaction.class, req.getPageNo(), req.getPageSize());
         } catch (Exception e) {
             this.logger.error(ERROR_TIPS, e);
             return result;
@@ -182,7 +183,7 @@ public class TransactionService {
         constructor.setUnmappedType("long");
         constructor.setResult(new String[]{"hash", "time", "status", "from", "to", "value", "num", "type", "toType", "cost", "failReason"});
         try {
-            items = this.ESTransactionRepository.search(constructor, Transaction.class, req.getPageNo(), req.getPageSize());
+            items = this.eSTransactionRepository.search(constructor, Transaction.class, req.getPageNo(), req.getPageSize());
         } catch (Exception e) {
             this.logger.error(ERROR_TIPS, e);
             return result;
@@ -247,7 +248,7 @@ public class TransactionService {
         constructor.setUnmappedType("long");
         constructor.setResult(new String[]{"hash", "time", "status", "from", "to", "value", "num", "type", "toType", "cost"});
         try {
-            items = this.ESTransactionRepository.search(constructor, Transaction.class, 1, 30000);
+            items = this.eSTransactionRepository.search(constructor, Transaction.class, 1, 30000);
         } catch (Exception e) {
             this.logger.error(ERROR_TIPS, e);
             return accountDownload;
@@ -290,7 +291,7 @@ public class TransactionService {
         /** 根据hash查询具体的交易数据 */
         Transaction transaction = null;
         try {
-            transaction = this.ESTransactionRepository.get(req.getTxHash(), Transaction.class);
+            transaction = this.eSTransactionRepository.get(req.getTxHash(), Transaction.class);
         } catch (Exception e) {
             this.logger.error(ERROR_TIPS, e);
             return resp;
@@ -369,7 +370,7 @@ public class TransactionService {
                 constructor.setResult(new String[]{"hash"});
                 ESResult<Transaction> first = new ESResult<>();
                 try {
-                    first = this.ESTransactionRepository.search(constructor, Transaction.class, 1, 1);
+                    first = this.eSTransactionRepository.search(constructor, Transaction.class, 1, 1);
                 } catch (Exception e) {
                     this.logger.error("获取交易错误。", e);
                     return resp;
@@ -388,7 +389,7 @@ public class TransactionService {
             constructor.setResult(new String[]{"hash"});
             ESResult<Transaction> last = new ESResult<>();
             try {
-                last = this.ESTransactionRepository.search(constructor, Transaction.class, 1, 1);
+                last = this.eSTransactionRepository.search(constructor, Transaction.class, 1, 1);
             } catch (Exception e) {
                 this.logger.error("获取交易错误。", e);
                 return resp;
@@ -1060,4 +1061,46 @@ public class TransactionService {
         result.init(delegationLogs, txBakWithBLOBs.stream().map(TransactionDetail::new).collect(Collectors.toList()));
         return result;
     }
+
+    public RespPage<TransactionDetail> transactionListByValueSelective(TransactionListByValueSelectiveReq req) {
+        RespPage<TransactionDetail> result = new RespPage<>();
+        ESQueryBuilderConstructor constructor = new ESQueryBuilderConstructor();
+        constructor.must(new ESQueryBuilders().range("value", req.getValue(), null));
+        ESResult<Transaction> items;
+        constructor.setDesc("seq");
+        constructor.setUnmappedType("long");
+        try {
+            items = this.eSTransactionRepository.search(constructor, Transaction.class, req.getPageNo(), req.getPageSize());
+        } catch (Exception e) {
+            this.logger.error(ERROR_TIPS, e);
+            return result;
+        }
+        List<TransactionDetail> lists = items.getRsData().stream().map(TransactionDetail::new).collect(Collectors.toList());
+        /** 统计交易信息 */
+        Page<?> page = new Page<>(req.getPageNo(), req.getPageSize());
+        result.init(page, lists);
+        result.setTotalCount(items.getTotal());
+        return result;
+    }
+
+    public RespPage<TransactionDetail> transactionListWithValue(PageReq req) {
+        RespPage<TransactionDetail> result = new RespPage<>();
+        ESQueryBuilderConstructor constructor = new ESQueryBuilderConstructor();
+        ESResult<Transaction> items;
+        constructor.setDesc("seq");
+        constructor.setUnmappedType("long");
+        try {
+            items = this.eSTransactionRepository.search(constructor, Transaction.class, req.getPageNo(), req.getPageSize());
+        } catch (Exception e) {
+            this.logger.error(ERROR_TIPS, e);
+            return result;
+        }
+        List<TransactionDetail> lists = items.getRsData().stream().map(TransactionDetail::new).collect(Collectors.toList());
+        /** 统计交易信息 */
+        Page<?> page = new Page<>(req.getPageNo(), req.getPageSize());
+        result.init(page, lists);
+        result.setTotalCount(items.getTotal());
+        return result;
+    }
+
 }

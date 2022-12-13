@@ -664,7 +664,7 @@ public class StakingService {
         ESQueryBuilders esQueryBuilders = new ESQueryBuilders().term("nodeId", nodeid)
                 .range("time", "now-330d", "now");
         constructor.must(esQueryBuilders);
-        constructor.setAggregation(byDay);
+        constructor.aggregation(byDay);
         try {
             Aggregations aggregations = esBlockRepository.aggregationSearch(constructor);
             result.setData(((ParsedDateHistogram) aggregations.get(aggregationName)).getBuckets().stream()
