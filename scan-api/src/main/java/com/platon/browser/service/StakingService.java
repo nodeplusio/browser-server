@@ -666,7 +666,7 @@ public class StakingService {
         constructor.must(esQueryBuilders);
         constructor.aggregation(byDay);
         try {
-            Aggregations aggregations = esBlockRepository.aggregationSearch(constructor);
+            Aggregations aggregations = esBlockRepository.aggregationSearch(constructor).getAggregations();
             result.setData(((ParsedDateHistogram) aggregations.get(aggregationName)).getBuckets().stream()
                     .map(BlockCountHistoryByNodeResp::new)
                     .collect(Collectors.toList()));

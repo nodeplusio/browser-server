@@ -31,7 +31,6 @@ import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
-import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.PipelineAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
@@ -400,7 +399,7 @@ public abstract class AbstractEsRepository {
         return esResult;
     }
 
-    public Aggregations aggregationSearch(ESQueryBuilderConstructor constructor) throws IOException {
+    public SearchResponse aggregationSearch(ESQueryBuilderConstructor constructor) throws IOException {
         long startTime = System.currentTimeMillis();
 
         SearchRequest searchRequest = new SearchRequest(getIndexName());
@@ -438,7 +437,7 @@ public abstract class AbstractEsRepository {
         log.debug("get rs" + searchSourceBuilder.toString());
         SearchResponse response = client.search(searchRequest, RequestOptions.DEFAULT);
         log.debug(CONSUME_TIME_TIPS, System.currentTimeMillis() - startTime);
-        return response.getAggregations();
+        return response;
     }
 
     /**

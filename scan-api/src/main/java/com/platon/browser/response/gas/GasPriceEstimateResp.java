@@ -12,7 +12,7 @@ public class GasPriceEstimateResp {
     private Long blockNumber;
 
     @JsonProperty("block_time")
-    private Double blockTime;
+    private Long blockTime;
 
     private Double slow;
     private Double standard;

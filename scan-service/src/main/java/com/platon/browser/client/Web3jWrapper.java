@@ -1,5 +1,6 @@
 package com.platon.browser.client;
 
+import com.platon.protocol.admin.Admin;
 import lombok.Builder;
 import lombok.experimental.Accessors;
 import com.platon.protocol.Web3j;
@@ -13,6 +14,7 @@ import com.platon.protocol.Web3jService;
 @Builder
 @Accessors(chain = true)
 public class Web3jWrapper {
+    private Admin admin;
     private Web3j web3j;
     private Web3jService web3jService;
     private String address;
@@ -34,5 +36,8 @@ public class Web3jWrapper {
 	public void setAddress(String address) {
 		this.address = address;
 	}
-    
+
+	public Admin getAdmin() {
+		return admin;
+	}
 }
