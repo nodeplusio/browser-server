@@ -20,7 +20,7 @@ build-deploy-dev: #build dev阶段
         - git fetch --all
         - git checkout $CI_COMMIT_TAG
         #- current_branch=`git branch -a --contains $CI_COMMIT_TAG|grep dev|tail -1|awk -F'/' '{print $3}'`;if [ "$current_branch" != "dev" ]; then echo $current_branch;echo "branch not in dev";exit 1; fi
-        #- bash /home/kiki/discord-notify_start.sh
+        - bash /home/kiki/discord-notify_start.sh
         #- export JAVA_HOME=/usr/local/jdk/jdk1.8.0_181
         - sh gradlew build -x test
         - mv ./scan-api/build/package/scan-api*.jar ./scan-api/build/package/scan-api.jar
@@ -35,7 +35,7 @@ build-deploy-dev: #build dev阶段
         #- ansible kiki-test -m shell -a "docker stop kiki-staking"
         #- ansible kiki-test -m shell -a "docker rm -v kiki-staking"
         #- ansible kiki-test -m shell -a "cd /usr/local/kiki/app && docker-compose  -f docker-compose-test.yml up -d --build"
-        #- DEPLOY_STATUS="test环境发布完成" && bash /home/kiki/discord-notify.sh $DEPLOY_STATUS
+        - DEPLOY_STATUS="test环境发布完成" && bash /home/kiki/discord-notify.sh $DEPLOY_STATUS
 
 build-release: #build release阶段
     stage: build
