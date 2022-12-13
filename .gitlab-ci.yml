@@ -1,0 +1,140 @@
+stages:
+    - test
+    - build
+    - deploy
+    - ding_notify_failure_end
+    - ding_notify_success_end
+
+
+
+build-deploy-dev: #build dev阶段
+    stage: build
+    tags:
+        - runner02 #gitlab-runner的tag
+    rules:
+        - if: $CI_COMMIT_TAG =~ /^dev*/ #如果dev分支发生提交
+    #when: manual #打开即为手动触发
+    script:
+        - ls
+        - pwd
+        - git fetch --all
+        - git checkout $CI_COMMIT_TAG
+        #- current_branch=`git branch -a --contains $CI_COMMIT_TAG|grep dev|tail -1|awk -F'/' '{print $3}'`;if [ "$current_branch" != "dev" ]; then echo $current_branch;echo "branch not in dev";exit 1; fi
+        #- bash /home/kiki/discord-notify_start.sh
+        #- export JAVA_HOME=/usr/local/jdk/jdk1.8.0_181
+        - sh gradlew build -x test
+        - mv ./scan-api/build/package/scan-api*.jar ./scan-api/build/package/scan-api.jar
+        - mv ./scan-agent/build/package/scan-agent*.jar ./scan-agent/build/package/scan-agent.jar
+        - mv ./scan-job/build/package/scan-job*.jar ./scan-job/build/package/scan-job.jar
+        - ansible browser-server -m copy -a "src=./scan-api/build/package/scan-api.jar dest=/usr/local/browser-server/scan-api/"
+        - ansible browser-server -m copy -a "src=./scan-agent/build/package/scan-agent.jar dest=/usr/local/browser-server/scan-agent/"
+        - ansible browser-server -m copy -a "src=./scan-job/build/package/scan-job.jar dest=/usr/local/browser-server/scan-job/"
+        - ansible browser-server -m shell -a "sudo systemctl restart scan-api.service"
+        - ansible browser-server -m shell -a "sudo systemctl restart scan-agent.service"
+        - ansible browser-server -m shell -a "sudo systemctl restart scan-job.service"
+        #- ansible kiki-test -m shell -a "docker stop kiki-staking"
+        #- ansible kiki-test -m shell -a "docker rm -v kiki-staking"
+        #- ansible kiki-test -m shell -a "cd /usr/local/kiki/app && docker-compose  -f docker-compose-test.yml up -d --build"
+        #- DEPLOY_STATUS="test环境发布完成" && bash /home/kiki/discord-notify.sh $DEPLOY_STATUS
+
+build-release: #build release阶段
+    stage: build
+    tags:
+        - runner02 #gitlab-runner的tag
+    rules:
+        - if: $CI_COMMIT_TAG =~ /^staging*/  #如果release分支打了tag，且格式为staging*
+    script:
+        - ls
+        - pwd
+        - git fetch
+        - echo $CI_COMMIT_REF_NAME
+        - git checkout $CI_COMMIT_REF_NAME
+        - current_branch=`git branch -a --contains $CI_COMMIT_TAG|grep master|tail -1|awk -F'/' '{print $3}'`;if [[ ! $current_branch=～"master" ]]; then echo $current_branch;echo "branch not in master";exit 1; fi
+        - bash /home/kiki/discord-notify_start.sh
+        - mvn clean package -Dmaven.test.skip=true
+        - ansible kiki-staging -m copy -a "src=./application/target/application-1.0.0.jar dest=/usr/local/kiki/app/"
+
+build-prod: #build release阶段
+    stage: build
+    tags:
+        - runner02 #gitlab-runner的tag
+    rules:
+        - if: $CI_COMMIT_TAG =~ /^[0-9]{1,2}\.*/ #&& $CI_COMMIT_BRANCH =~ /^master*/ #如果master分支发生提交
+    #only:
+    #    - tags
+    #    - master
+    #when: manual
+    script:
+        - ls
+        - pwd
+        - git fetch --all
+        - git checkout $CI_COMMIT_TAG
+        - current_branch=`git branch -a --contains $CI_COMMIT_TAG|grep master|tail -1|awk -F'/' '{print $3}'`;if [ "$current_branch" != "master" ]; then echo $current_branch;echo "branch not in master";exit 1; fi
+        - bash /home/kiki/discord-notify_start.sh
+        - mvn clean package -DENV_NAME=test -Dmaven.test.skip=true
+        - ls ./application/target/application-1.0.0.jar
+        - ansible kiki-prod -m copy -a "src=./application/target/application-1.0.0.jar dest=/usr/local/kiki/app/"
+
+
+deploy-staging:
+    stage: deploy
+    tags:
+        - runner02 #gitlab-runner的tag
+    rules:
+        - if: $CI_COMMIT_TAG =~ /^staging*/
+    #only:
+    #    - tags
+    when: on_success
+    script:
+        #- ls /usr/local/kiki/app/
+        #- ansible kiki-staging -m copy -a "src=./staging_jar dest=/usr/local/kiki/jar/"
+        #- ansible kiki-staging -m shell -a "cd /usr/local/kiki/jar/ && rm -fr staking-job.jar && mv staging_jar/staking-job.jar ."
+        #- ansible  kiki-staging -m shell -a "sudo systemctl restart staking-job.service"
+        #- ansible kiki-staging -m shell -a "cd /usr/local/kiki/jar/ && rm -fr staking-web.jar && mv staging_jar/staking-web.jar ."
+        #- ansible  kiki-staging -m shell -a "sudo systemctl restart staking-web.service"
+        #- ansible kiki-staging -m shell -a "cd /usr/local/kiki/jar/ && rm -fr staking-validator.jar && mv staging_jar/staking-validator.jar ."
+        #- DEPLOY_STATUS="staging环境发布完成" && bash /home/kiki/discord-notify.sh $DEPLOY_STATUS
+        #- ansible kiki-test -m copy -a "src=./dev_src dest=/usr/local/kiki/app/"
+        #- ansible kiki-staging -m shell -a "cd /usr/local/kiki/app/ && mv ./dev_src/app.tar.gz . &&  tar -zxf app.tar.gz"
+        - ansible kiki-staging -m shell -a "docker stop kiki-staking"
+        - ansible kiki-staging -m shell -a "docker rm -v kiki-staking"
+        - ansible  kiki-staging -m shell -a "cd /usr/local/kiki/app && docker-compose  -f docker-compose-staging.yml up -d --build"
+        - DEPLOY_STATUS="staging环境发布完成" && bash /home/kiki/discord-notify.sh $DEPLOY_STATUS
+
+
+
+deploy-prod:
+    stage: deploy
+    tags:
+        - runner02 #gitlab-runner的tag
+    rules:
+        - if: $CI_COMMIT_TAG =~ /^[0-9]{1,2}\.*/ #如果master分支发生提交
+    when: on_success
+    #only:
+    #    - tags
+    #when: manual
+    script:
+        - ansible  kiki-prod -m shell -a "ls /usr/local/kiki/app/"
+        #- ansible kiki-test -m copy -a "src=./dev_src dest=/usr/local/kiki/app/"
+        #- ansible kiki-test -m shell -a "cd /usr/local/kiki/app/ && mv ./dev_src/app.tar.gz . &&  tar -zxf app.tar.gz"
+        #- ansible kiki-test -m shell -a "docker stop kiki-staking"
+        #- ansible kiki-test -m shell -a "docker rm -v kiki-staking"
+        #- ansible  kiki-test -m shell -a "cd /usr/local/kiki/app && docker-compose  -f docker-compose-test.yaml up -d --build"
+        - ansible kiki-prod -m shell -a "docker stop kiki-staking"
+        - ansible kiki-prod -m shell -a "docker rm -v kiki-staking"
+        - ansible  kiki-prod -m shell -a "cd /usr/local/kiki/app && docker-compose  -f docker-compose-prod.yml up -d --build"
+        - DEPLOY_STATUS="prod环境发布完成" && bash /home/kiki/discord-notify.sh $DEPLOY_STATUS
+
+
+ding_notify_failure_end:
+    stage: ding_notify_failure_end
+    tags:
+        - runner02
+    when: on_failure
+    #except:
+    #    - branches
+    variables:
+        DEPLOY_STATUS: "失败,请查看详情：https://gitlab.figo.network/kiki/kiki-staking/-/pipelines"
+    script:
+        ls
+        #- bash /home/kiki/discord-notify.sh $DEPLOY_STATUS
