@@ -134,7 +134,7 @@ ding_notify_failure_end:
     #except:
     #    - branches
     variables:
-        DEPLOY_STATUS: "失败,请查看详情：https://gitlab.figo.network/kiki/kiki-staking/-/pipelines"
+        DEPLOY_STATUS: "失败,请查看详情：https://gitlab.figo.network/kiki/platon-browser-server/-/pipelines"
     script:
         ls
-        #- bash /home/kiki/discord-notify.sh $DEPLOY_STATUS
+        - bash /home/kiki/discord-notify.sh $DEPLOY_STATUS
