@@ -180,7 +180,7 @@ public class TransactionController {
     }
 
     /**
-     * 2.4 历史委托列表
+     * 2.4 大额交易的列表
      *
      * @param req
      */

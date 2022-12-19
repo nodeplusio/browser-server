@@ -115,7 +115,8 @@ xxl:
     executor:
       #执行器AppName
       appname: platon-scan-job
-      ip: 192.168.21.114
+      #      ip: 192.168.21.114
+      ip:
       #执行器端口号
       port: 9997
       #执行器运行日志文件存储磁盘路径

@@ -3,7 +3,7 @@ info:
   version: 'v_VERSION_ Build #_COMMIT_ID_'
   title: 浏览器API文档
   description:
-host: localhost:9061
+host: localhost:40010
 basePath: "_BASE_PATH_"
 
 schemes:
@@ -159,6 +159,90 @@ paths:
           description: 返回地址详情
           schema:
             $ref: '#/definitions/RpplanDetailResult'
+  /address/addressvalue:
+    post:
+      operationId: addressvalue
+      tags:
+        - 地址接口
+      summary: 1.1 地址列表按余额大小排序
+      description: 实现逻辑：
+        1、查询mysql中address表，按余额从大到小排序<br/>
+      produces:
+        - application/json
+      parameters:
+        - name: body
+          description: 参数对象
+          in: body
+          schema:
+            $ref: '#/definitions/PagingParam'
+      responses:
+        '200':
+          description: 地址持仓排名功能 返回地址列表接口
+          schema:
+            $ref: '#/definitions/AddressValueResult'
+  /address/addressValueAllCols:
+    post:
+      operationId: addressValueAllCols
+      tags:
+        - 地址接口
+      summary: 1.2 地址列表所有字段的排序
+      description: 实现逻辑：
+        1、查询mysql中address表的所有字段，按余额从大到小排序<br/>
+      produces:
+        - application/json
+      parameters:
+        - name: body
+          description: 地址列表参数对象
+          in: body
+          schema:
+            $ref: '#/definitions/PagingParam'
+      responses:
+        '200':
+          description: 地址持仓排名功能 返回地址列表接口
+          schema:
+            $ref: '#/definitions/AddressValueAllColsResult'
+  /address/getAllEpoch:
+    post:
+      operationId: getAllEpoch
+      tags:
+        - 地址接口
+      summary: 2.5.1 每日锁仓解锁的所有地址总金额列表，以解锁的高度排序
+      description: 实现逻辑：
+        1、查询mysql中rp_plan表，按number, epoch分组统计所有地址的总金额<br/>
+      produces:
+        - application/json
+      parameters:
+        - name: body
+          description: 参数对象
+          in: body
+          schema:
+            $ref: '#/definitions/PagingParam'
+      responses:
+        '200':
+          description: 返回解锁列表接口
+          schema:
+            $ref: '#/definitions/getAllEpochResult'
+  /address/getRpPlanByUnlockNumber:
+    post:
+      operationId: getRpPlanByUnlockNumber
+      tags:
+        - 地址接口
+      summary: 2.5.3 查看特定epoch和区块号下的解锁情况
+      description: 实现逻辑：
+        1、按epoch和区块号，查询mysql中rp_plan表<br/>
+      produces:
+        - application/json
+      parameters:
+        - name: body
+          description: 参数对象
+          in: body
+          schema:
+            $ref: '#/definitions/getRpPlanByUnlockNumberParam'
+      responses:
+        '200':
+          description: 返回解锁列表接口
+          schema:
+            $ref: '#/definitions/getRpPlanByUnlockNumberResult'
   #内置地址相关接口
   /internalAddress/foundationInfo:
     post:
@@ -522,10 +606,10 @@ paths:
         - Token令牌接口
       summary: Token令牌持有人列表导出
       description: 实现逻辑：|
-         查询ES中索引数据<br/>
-         如果传入合约地址，则返回当前合约内的所有转账记录<br/>
-         如果传入用户地址，则返回该地址作为转账扣除这或者接收者的代币转账记录<br/>
-         如果同时存在，则返回地址在当前合约内的转账记录（暂无此场景）<br/>
+        查询ES中索引数据<br/>
+        如果传入合约地址，则返回当前合约内的所有转账记录<br/>
+        如果传入用户地址，则返回该地址作为转账扣除这或者接收者的代币转账记录<br/>
+        如果同时存在，则返回地址在当前合约内的转账记录（暂无此场景）<br/>
       produces:
         - application/json
       parameters:
@@ -559,9 +643,9 @@ paths:
         - Token令牌接口
       summary: 持有者的Token令牌列表
       description: 实现逻辑：|
-         查询数据库中数据<br/>
-         如果传入合约地址，则返回当前合约内的所有持有人记录<br/>
-         如果传入用户地址，则返回该地址持有的token记录<br/>
+        查询数据库中数据<br/>
+        如果传入合约地址，则返回当前合约内的所有持有人记录<br/>
+        如果传入用户地址，则返回该地址持有的token记录<br/>
       produces:
         - application/json
       parameters:
@@ -582,10 +666,10 @@ paths:
         - Token令牌接口
       summary: 持有者的Token令牌列表导出
       description: 实现逻辑：|
-         查询ES中索引数据<br/>
-         如果传入合约地址，则返回当前合约内的所有转账记录<br/>
-         如果传入用户地址，则返回该地址作为转账扣除这或者接收者的代币转账记录<br/>
-         如果同时存在，则返回地址在当前合约内的转账记录（暂无此场景）<br/>
+        查询ES中索引数据<br/>
+        如果传入合约地址，则返回当前合约内的所有转账记录<br/>
+        如果传入用户地址，则返回该地址作为转账扣除这或者接收者的代币转账记录<br/>
+        如果同时存在，则返回地址在当前合约内的转账记录（暂无此场景）<br/>
       produces:
         - application/json
       parameters:
@@ -973,6 +1057,78 @@ paths:
           description: 返回节点详情
           schema:
             $ref: '#/definitions/DelegationListByAddressListResult'
+  /v2/staking/getBlockCountHistoryByNode:
+    get:
+      operationId: getBlockCountHistoryByNode
+      tags:
+        - 验证人接口
+      summary: 2.2.1 节点历史出块数
+      description: |
+        1. 功能：节点历史出块数查询<br/>
+        2. 实现逻辑：<br/>
+          查询es中browser_platon_block索引，查询 nodeid = nodeid 的最近30天的记录，按天统计出块数
+      produces:
+        - application/json
+      parameters:
+        - name: nodeId
+          description: 节点id
+          in: query
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 返回节点历史出块详情
+          schema:
+            $ref: '#/definitions/getBlockCountHistoryByNodeResult'
+  /v2/staking/getDeleAnnualizedRateHistoryByNode:
+    get:
+      operationId: getDeleAnnualizedRateHistoryByNode
+      tags:
+        - 验证人接口
+      summary: 2.2.2 节点历史年化率
+      description: |
+        1. 功能：节点历史年化率详情<br/>
+        2. 实现逻辑：<br/>
+          查询mysql中node_history_dele_annualized_rate表，查询 nodeid = nodeid 的最近30天的记录<br/>
+          node_history_dele_annualized_rate表的数据为按天和nodeid统计tx_delegation_reward_bak表中的extra字段的reward值，<br/>
+          然后reward*365/node_history_total_and_stat_delegate_value表中的总质押+总委托的最大值最小值和平均值
+      produces:
+        - application/json
+      parameters:
+        - name: nodeId
+          description: 节点id
+          in: query
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 返回节点历史年化率详情
+          schema:
+            $ref: '#/definitions/getDeleAnnualizedRateHistoryByNodeResult'
+  /v2/staking/getTotalValueHistoryByNode:
+    get:
+      operationId: getTotalValueHistoryByNode
+      tags:
+        - 验证人接口
+      summary: 2.2.3 节点历史总质押和总委托
+      description: |
+        1. 功能：节点历史总质押和总委托详情<br/>
+        2. 实现逻辑：<br/>
+          查询mysql中node_history_total_and_stat_delegate_value表，查询 nodeid = nodeid 的最近30天的记录 <br/>
+          node_history_total_and_stat_delegate_value表为按天和nodeid统计类型为1000, 1002, 1004的tx_bak表数据，1000, 1002为委托数据，1004为质押数据
+      produces:
+        - application/json
+      parameters:
+        - name: nodeId
+          description: 节点id
+          in: query
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 返回节点历史总质押和总委托详情
+          schema:
+            $ref: '#/definitions/getTotalValueHistoryByNodeResult'
 
   #交易相关接口
   /transaction/transactionList:
@@ -1053,7 +1209,7 @@ paths:
       description: 实现逻辑：|
         1. 功能：导出地址的交易列表查询<br/>
         2. 实现逻辑：<br/>
-          查询mysql中transaction表
+        查询mysql中transaction表
       produces:
         - application/json
       parameters:
@@ -1166,6 +1322,171 @@ paths:
           description: 返回奖励列表
           schema:
             $ref: '#/definitions/QueryClaimByStakingListResult'
+  /transaction/queryDelegationLogByNodeId:
+    post:
+      operationId: queryDelegationLogByNodeId
+      tags:
+        - 交易接口
+      summary: 2.3 历史委托列表
+      description: |
+        1. 功能：记录节点的委托操作记录，每次有对应地址撤销或者委托上去需要记录到该节点下，到时候弄个list，记录委托和撤销的历史操作<br/>
+        2. 实现逻辑：<br/>
+          按nodeid查询mysql中delegation_log表，然后根据交易id查询tx_bak表的交易数据<br/>
+          delegation_log:筛选1004, 1005类型的tx_bak的id
+      produces:
+        - application/json
+      parameters:
+        - name: body
+          description: 参数对象
+          in: body
+          schema:
+            $ref: '#/definitions/queryDelegationLogByNodeIdParam'
+      responses:
+        '200':
+          description: 返回历史委托列表
+          schema:
+            $ref: '#/definitions/queryDelegationLogByNodeIdResult'
+  /transaction/transactionListByValueSelective:
+    post:
+      operationId: transactionListByValueSelective
+      tags:
+        - 交易接口
+      summary: 2.4 大额交易的列表
+      description: |
+        1. 功能：提供大额交易的列表（转账数量大于限额atp的交易list，以时间排序）<br/>
+        2. 实现逻辑：<br/>
+          根据最小value值查询es的browser_platon_transaction索引，以时间倒叙排序
+      produces:
+        - application/json
+      parameters:
+        - name: body
+          description: 参数对象
+          in: body
+          schema:
+            $ref: '#/definitions/transactionListByValueSelectiveParam'
+      responses:
+        '200':
+          description: 返回交易列表
+          schema:
+            $ref: '#/definitions/transactionListByValueSelectiveResult'
+  /transaction/transactionListWithValue:
+    post:
+      operationId: transactionListWithValue
+      tags:
+        - 交易接口
+      summary: 2.5 分页查交易
+      description: |
+        1. 功能：分页查交易<br/>
+        2. 实现逻辑：<br/>
+          分页查询es的browser_platon_transaction索引，以时间倒叙排序 （新增1004、1005、5000的value了）
+      produces:
+        - application/json
+      parameters:
+        - name: body
+          description: 参数对象
+          in: body
+          schema:
+            $ref: '#/definitions/PagingParam'
+      responses:
+        '200':
+          description: 返回交易列表
+          schema:
+            $ref: '#/definitions/transactionListWithValueResult'
+  # gas接口
+  /v2/gas/gasPriceEstimate:
+    post:
+      operationId: gasPriceEstimate
+      tags:
+        - gas接口
+      summary: 3.1 gas费用估计
+      description: |
+        1. 功能：提供四种确认速度的gas手续费预估，每笔交易从收到到区块确认的间隔和手续费价格的关系<br/>
+          统计最新的14400个区块（4h），获取每个区块最低的gasprice进行排序，取<br/>
+          slow: 10% (20s内确认)、<br/>
+          standard：50% (4s内确认)、<br/>
+          fast：99% (1s内确认)、<br/>
+          instant：100% (立即确认)<br/>
+        2. 实现逻辑：<br/>
+          按区块聚合统计4小时内ES的browser_platon_transaction索引里gasprice最小的数据，然后再按百分比聚合获得10%、50%、99%、100%的数据
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: 返回gas费用估计
+          schema:
+            $ref: '#/definitions/gasPriceEstimateResult'
+  /v2/gas/getGasPriceHistoryGroupByBlock:
+    post:
+      operationId: getGasPriceHistoryGroupByBlock
+      tags:
+        - gas接口
+      summary: 3.2 每个区块的费用统计
+      description: |
+        1. 功能：每个区块的费用统计、最高的gas费和低的gas费统计<br/>
+          ES统计最新的14400个区块（4h）的gasPrice 和 gas消耗<br/>
+        2. 实现逻辑：<br/>
+          按区块聚合统计4小时内ES的browser_platon_transaction索引里const最大、最小、平均、总和和gasprice最大、最小、平均的数据
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: 返回gas费用估计
+          schema:
+            $ref: '#/definitions/getGasPriceHistoryGroupByBlockResult'
+  /v2/gas/getCountGroupByGasPrice:
+    post:
+      operationId: getCountGroupByGasPrice
+      tags:
+        - gas接口
+      summary: 3.3 gasPrice统计
+      description: |
+        1. 功能：统计不同gasPrice的交易数量<br/>
+          ES统计最新的区块（24h）<br/>
+        2. 实现逻辑：<br/>
+          按gasPrice聚合统计24小时内ES的browser_platon_transaction索引的文档数量
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: 返回gas费用估计
+          schema:
+            $ref: '#/definitions/getCountGroupByGasPriceResult'
+  /v2/gas/getCostGroupByTxType:
+    post:
+      operationId: getCostGroupByTxType
+      tags:
+        - gas接口
+      summary: 3.4 不同交易gas消耗估计
+      description: |
+        1. 功能：各种类型交易的gas费用估计，比如转账、委托、prc20交易等 (不同交易类型cost统计)<br/>
+          ES统计最近1周的所有交易
+        2. 实现逻辑：<br/>
+          按类型聚合统计1周内ES的browser_platon_transaction索引的const最大、最小、平均
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: 返回gas费用估计
+          schema:
+            $ref: '#/definitions/getCostGroupByTxTypeResult'
+  /v2/gas/getPendingTxInfo:
+    post:
+      operationId: getPendingTxInfo
+      tags:
+        - gas接口
+      summary: 3.5 查看pending状态尚未打包的交易
+      description: |
+        1. 功能：查看pending状态尚未打包的交易<br/>
+        2. 实现逻辑：<br/>
+          修改客户端，从交易池中获取交易信息。调用节点rpc接口获取，https://geth.ethereum.org/docs/rpc/ns-txpool
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: 返回gas费用估计
+          schema:
+            $ref: '#/definitions/getPendingTxInfoResult'
+
 #实体定义
 definitions:
   #通用参数对象
@@ -1174,11 +1495,13 @@ definitions:
     description: 分页参数
     properties:
       pageNo:
-        description: 页数(必填)
+        description: 页数
         type: integer
+        default: 1
       pageSize:
-        description: 页大小(必填)
+        description: 页大小
         type: integer
+        default: 10
   #地址相关
   AddressDetailParam:
     type: object
@@ -1356,6 +1679,216 @@ definitions:
         type: integer
       data:
         $ref: '#/definitions/RpplanDetail'
+  AddressValueAllCols:
+    type: object
+    description: 地址详情对象
+    properties:
+      address:
+        description: 地址
+        type: string
+      type:
+        description: 地址类型 1：账号 2：内置合约 3：EVM合约 4:WASM合约 5:EVM-Token 6:WASM-Token
+        type: integer
+      balance:
+        description: 余额(单位:VON)
+        type: integer
+      restrictingBalance:
+        description: 锁仓余额(单位:VON)
+        type: integer
+      stakingValue:
+        description: 质押的金额(单位:VON)
+        type: integer
+      delegateValue:
+        description: 委托的金额(单位:VON)
+        type: integer
+      redeemedValue:
+        description: 赎回中的金额(单位:VON)
+        type: integer
+      txQty:
+        description: 交易总数
+        type: integer
+      transferQty:
+        description: 转账交易总数
+        type: integer
+      delegateQty:
+        description: 委托交易总数
+        type: integer
+      stakingQty:
+        description: 验证人交易总数
+        type: integer
+      proposalQty:
+        description: 治理交易总数
+        type: integer
+      candidateCount:
+        description: 已委托的验证人数
+        type: integer
+      delegateHes:
+        description: 未锁定委托（VON）
+        type: integer
+      delegateLocked:
+        description: 已锁定委托（VON）
+        type: integer
+      delegateReleased:
+        description: 待赎回委托（VON）
+        type: integer
+      contractName:
+        description: 合约名称
+        type: string
+      contractCreate:
+        description: 合约创建者地址
+        type: string
+      contractCreatehash:
+        description: 合约创建哈希
+        type: string
+      contractDestroyHash:
+        description: 销毁合约的交易Hash
+        type: string
+      contractBin:
+        description: 合约bincode数据(通过web3j查询出来的合约代码)
+        type: string
+      haveReward:
+        description: 累计领取委托奖励
+        type: integer
+      totalValue:
+        description: 余额+质押的金额+委托的金额(单位:LAT)
+        type: integer
+  AddressValueAllColsResult:
+    type: object
+    properties:
+      errMsg:
+        description: 描述信息
+        type: string
+      code:
+        description: 成功（0），失败则有相关失败码
+        type: integer
+      displayTotalCount:
+        description: 显示总数
+        type: integer
+      totalCount:
+        description: 小于等于500000记录的总数
+        type: integer
+      totalPages:
+        description: 总页数
+        type: integer
+      data:
+        type: array
+        items:
+          $ref: '#/definitions/AddressValueAllCols'
+  getAllEpochResult:
+    type: object
+    properties:
+      errMsg:
+        description: 描述信息
+        type: string
+      code:
+        description: 成功（0），失败则有相关失败码
+        type: integer
+      displayTotalCount:
+        description: 显示总数
+        type: integer
+      totalCount:
+        description: 小于等于500000记录的总数
+        type: integer
+      totalPages:
+        description: 总页数
+        type: integer
+      data:
+        type: array
+        items:
+          $ref: '#/definitions/getAllEpochResultDetail'
+  getAllEpochResultDetail:
+    type: object
+    properties:
+      totalCount:
+        description: 总数
+        type: integer
+      totalAmount:
+        description: 总金额
+        type: integer
+      estimateTime:
+        description: 估计时间
+        type: integer
+      unlockNumber:
+        description: 解锁的区块高度
+        type: integer
+  getRpPlanByUnlockNumberParam:
+    type: object
+    description: 参数对象
+    properties:
+      unlockNumber:
+        description: 解锁的区块高度
+        type: integer
+      pageNo:
+        description: 页号
+        type: integer
+      pageSize:
+        description: 页码
+        type: integer
+  AddressValue:
+    type: object
+    description: 地址详情
+    properties:
+      address:
+        description: 地址
+        type: string
+      balance:
+        description: 余额(单位:VON)
+        type: integer
+      stakingValue:
+        description: 质押的金额(单位:VON)
+        type: integer
+      delegateValue:
+        description: 委托的金额(单位:VON)
+        type: integer
+      totalValue:
+        description: 余额+质押的金额+委托的金额(单位:LAT)
+        type: integer
+      RPPlan:
+        $ref: '#/definitions/RpplanDetail'
+  AddressValueResult:
+    type: object
+    properties:
+      errMsg:
+        description: 描述信息
+        type: string
+      code:
+        description: 成功（0），失败则有相关失败码
+        type: integer
+      displayTotalCount:
+        description: 显示总数
+        type: integer
+      totalCount:
+        description: 小于等于500000记录的总数
+        type: integer
+      totalPages:
+        description: 总页数
+        type: integer
+      data:
+        type: array
+        items:
+          $ref: '#/definitions/AddressValue'
+  getRpPlanByUnlockNumberResult:
+    type: object
+    properties:
+      errMsg:
+        description: 描述信息
+        type: string
+      code:
+        description: 成功（0），失败则有相关失败码
+        type: integer
+      data:
+        type: array
+        items:
+          $ref: '#/definitions/getRpPlanByUnlockNumberResultDetail'
+  getRpPlanByUnlockNumberResultDetail:
+    type: object
+    properties:
+      address:
+        description: 地址
+        type: string
+      amount:
+        description: 金额
+        type: integer
   #区块相关
   BlockListParam:
     type: object
@@ -3056,6 +3589,90 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/DelegationListByAddressDetail'
+  getBlockCountHistoryByNodeResult:
+    type: object
+    properties:
+      code:
+        description: 成功（0），失败则有相关失败码
+        type: integer
+      data:
+        type: array
+        items:
+          $ref: '#/definitions/getBlockCountHistoryByNodeResultDetail'
+  getBlockCountHistoryByNodeResultDetail:
+    type: object
+    description:
+    properties:
+      key_as_string:
+        description: 日期
+        type: string
+      key:
+        description: 时间截
+        type: timestamp
+      doc_count:
+        description: 出块数量
+        type: integer
+  getDeleAnnualizedRateHistoryByNodeResult:
+    type: object
+    properties:
+      code:
+        description: 成功（0），失败则有相关失败码
+        type: integer
+      data:
+        type: array
+        items:
+          $ref: '#/definitions/getDeleAnnualizedRateHistoryByNodeResultDetail'
+  getDeleAnnualizedRateHistoryByNodeResultDetail:
+    type: object
+    description:
+    properties:
+      time__date:
+        description: 日期
+        type: string
+      deleAnnualizedRateMax:
+        description: 年化率最大值
+        type: integer
+      deleAnnualizedRateMin:
+        description: 年化率最小值
+        type: integer
+      deleAnnualizedRateAvg:
+        description: 年化率平均值
+        type: integer
+  getTotalValueHistoryByNodeResult:
+    type: object
+    properties:
+      code:
+        description: 成功（0），失败则有相关失败码
+        type: integer
+      data:
+        type: array
+        items:
+          $ref: '#/definitions/getTotalValueHistoryByNodeResultDetail'
+  getTotalValueHistoryByNodeResultDetail:
+    type: object
+    description:
+    properties:
+      time__date:
+        description: 日期
+        type: string
+      totalValueMax:
+        description: 总质押+总委托 最大值
+        type: integer
+      totalValueMin:
+        description: 总质押+总委托 最小值
+        type: integer
+      totalValueAvg:
+        description: 总质押+总委托 平均值
+        type: integer
+      statDelegateValueMax:
+        description: 总委托 最大值
+        type: integer
+      statDelegateValueMin:
+        description: 总委托 最小值
+        type: integer
+      statDelegateValueAvg:
+        description: 总委托 平均值
+        type: integer
 
   LockedStakingListParam:
     type: object
@@ -3703,6 +4320,609 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/QueryClaimByStakingDetail'
+  queryDelegationLogByNodeIdParam:
+    type: object
+    properties:
+      pageNo:
+        description: 页数(必填)
+        type: integer
+      pageSize:
+        description: 页大小(必填)
+        type: integer
+      type:
+        description: 指定需要查询的交易类型（目前落库1004/1005）
+        type: integer
+      nodeId:
+        description: 节点id(必填)
+        type: string
+  queryDelegationLogByNodeIdResult:
+    type: object
+    properties:
+      errMsg:
+        description: 描述信息
+        type: string
+      code:
+        description: 成功（0），失败则有相关失败码
+        type: integer
+      totalCount:
+        description: 记录总数
+        type: integer
+      totalPages:
+        description: 总页数
+        type: integer
+      nodeId:
+        description: 节点id
+        type: string
+      type:
+        description: 指定需要查询的交易类型（目前落库1004/1005）
+        type: integer
+      totalTxAmount:
+        description: 总金额
+        type: integer
+      data:
+        type: array
+        items:
+          $ref: '#/definitions/queryDelegationLogByNodeIdResultDetail'
+  queryDelegationLogByNodeIdResultDetail:
+    type: object
+    properties:
+      txHash:
+        description: 交易hash
+        type: string
+      from:
+        description: 发送方地址（操作地址）
+        type: string
+      to:
+        description: 接收方地址
+        type: string
+      timestamp:
+        description: 交易时间
+        type: integer
+      serverTime:
+        description: 服务器时间
+        type: integer
+      confirmNum:
+        description: 区块确认数
+        type: integer
+      blockNumber:
+        description: 交易所在区块高度
+        type: integer
+      gasLimit:
+        description: 能量限制
+        type: integer
+      gasUsed:
+        description: 能量限制
+        type: integer
+      gasPrice:
+        description: 能量价格
+        type: string
+      value:
+        description: 金额(单位:von)
+        type: string
+      actualTxCost:
+        description: 交易费用(单位:von)
+        type: string
+      txType:
+        description: 交易类型,可用值:0-转账,1-合约发布(合约创建),2-合约调用(合约执行),3-合约销毁(合约销毁),5-MPC交易,6-erc20合约创建,7-erc20合约执行,1000-发起质押 (创建验证人),1001-修改质押信息(修改验证人),1002-增持质押(增持自由质押),1003-撤销质押(退出验证人),1004-发起委托 (委托),1005-减持/撤销委托(赎回委托),2000-提交文本提案 (创建提案),2001-提交升级提案(提交提案),2002-提交参数提案(提交提案-去除暂时不要),2003-给提案投票(提案投票),2004-版本声明,2005-取消提案,3000-举报多签(举报验证人),4000-创建锁仓计划(创建锁仓),5000-领取奖励
+        type: string
+      input:
+        description: 附加输入数据
+        type: string
+      txInfo:
+        description: 附加输入数据解析后的结构
+        type: string
+      failReason:
+        description: 失败原因
+        type: string
+      first:
+        description: 是否第一条记录
+        type: boolean
+      preHash:
+        description: 前一交易HASH
+        type: string
+      last:
+        description: 是否最后一条记录
+        type: boolean
+      nextHash:
+        description: 下一交易HASH
+        type: string
+      toType:
+        description: 此字段表示的是to字段存储的账户类型, 前端页面在点击接收方的地址时，根据此字段来决定是跳转到账户详情还是合约详情,可用值:1-合约地址,2-钱包地址,3-erc合约地址
+        type: string
+      contractType:
+        description: 合约类型 0-系统合约，1-evm合约 2-wasm合约 3-evm-token
+        type: integer
+      contractName:
+        description: 合约名称
+        type: string
+      method:
+        description: 合约调用函数
+        type: string
+      RPAccount:
+        description: 锁仓计划的地址
+        type: string
+      RPNum:
+        description: 锁仓数量
+        type: string
+      RPPlan:
+        description: 锁仓计划列表
+        type: array
+        items:
+          $ref: '#/definitions/RPPlan'
+      evidences:
+        description: 举报的证据
+        type: array
+        items:
+          $ref: '#/definitions/Evidence'
+      nodeId:
+        description: 节点id
+        type: string
+      nodeName:
+        description: 节点名称
+        type: string
+      benefitAddr:
+        description: 用于接受出块奖励和质押奖励的收益账户
+        type: string
+      externalId:
+        description: 外部Id(有长度限制，给第三方拉取节点描述的Id)
+        type: string
+      website:
+        description: 节点的第三方主页(有长度限制，表示该节点的主页)
+        type: string
+      details:
+        description: 节点的描述(有长度限制，表示该节点的描述)
+        type: string
+      programVersion:
+        description: 程序的真实版本，治理rpc获取
+        type: string
+      applyAmount:
+        description: 申请赎回的金额
+        type: string
+      redeemLocked:
+        description: 赎回中被锁定的金额  staing staking_reduction
+        type: string
+      redeemStatus:
+        description: 赎回状态， 1： 退回中   2：退回成功
+        type: integer
+      redeemUnLockedBlock:
+        description: 预计赎回到账的区块  staing (staking_reduction_epoch+节点质押退回锁定周期（是否包含当前）)*结算周期区块数(C)
+        type: integer
+      proposalUrl:
+        description: 提案的github地址  https://github.com/ethereum/EIPs/blob/master/EIPS/eip-100.md  eip-100为提案id
+        type: string
+      proposalHash:
+        description: 提案id
+        type: string
+      proposalOption:
+        description: 投票  1：文本提案 2：升级提案 3：参数提案
+        type: integer
+      proposalNewVersion:
+        description: 升级提案的版本
+        type: string
+      declareVersion:
+        description: 声明的版本
+        type: string
+      txReceiptStatus:
+        description: 交易状态 1:成功 0：失败
+        type: integer
+      evidence:
+        description: 证据
+        type: string
+      reportType:
+        description: 举报类型:1：prepareBlock，2：prepareVote，3：viewChange
+        type: integer
+      reportRewards:
+        description: 举报奖励
+        type: string
+      reportStatus:
+        description: 举报状态 1：失败 2：成功
+        type: integer
+      pipNum:
+        description: 提案pip编号
+        type: string
+      proposalStatus:
+        description: 提案状态 1：投票中 2：通过 3：失败 4：预升级 5：升级完成
+        type: integer
+      proposalTitle:
+        description: 提案标题
+        type: string
+      txAmount:
+        description: 交易金额包括质押数量、提取数量
+        type: string
+      voteStatus:
+        description: 投票选项 1:支持  2:反对 3:弃权
+        type: integer
+      delegationRatio:
+        description: 委托比例
+        type: string
+      erc20Params:
+        description: ERC20参数
+        type: array
+        items:
+          $ref: '#/definitions/Erc20Params'
+      erc721Params:
+        description: ERC20参数
+        type: array
+        items:
+          $ref: '#/definitions/Erc721Params'
+      rewards:
+        description: 领取奖励
+        type: array
+        items:
+          $ref: '#/definitions/Reward'
+  transactionListByValueSelectiveResult:
+    type: object
+    properties:
+      errMsg:
+        description: 描述信息
+        type: string
+      code:
+        description: 成功（0），失败则有相关失败码
+        type: integer
+      totalCount:
+        description: 记录总数
+        type: integer
+      totalPages:
+        description: 总页数
+        type: integer
+      data:
+        type: array
+        items:
+          $ref: '#/definitions/transactionListByValueSelectiveResultDetail'
+  transactionListByValueSelectiveResultDetail:
+    type: object
+    description:
+    properties:
+      id:
+        description: 交易的id
+        type: integer
+      index:
+        description: 交易的index
+        type: integer
+      bhash:
+        description: 交易bhash
+        type: string
+      hash:
+        description: 交易hash
+        type: string
+      from:
+        description: 发送方地址（操作地址）
+        type: string
+      to:
+        description: 接收方地址
+        type: string
+      value:
+        description: 金额(单位:von)
+        type: string
+      type:
+        description: 交易类型
+        type: string
+        enum:
+          - 0-转账
+          - 1-合约发布(合约创建)
+          - 2-合约调用(合约执行)
+          - 21-合约销毁
+          - 4-其他
+          - 5-MPC交易
+          - 6-erc20合约创建
+          - 7-erc20合约执行
+          - 8-erc721合约创建
+          - 9-erc721合约执行
+          - 1000-发起质押 (创建验证人)
+          - 1001-修改质押信息(修改验证人)
+          - 1002-增持质押(增持自由质押)
+          - 1003-撤销质押(退出验证人)
+          - 1004-发起委托 (委托)
+          - 1005-减持/撤销委托(赎回委托)
+          - 2000-提交文本提案 (创建提案)
+          - 2001-提交升级提案(提交提案)
+          - 2002-提交参数提案(提交提案-去除暂时不要)
+          - 2003-给提案投票(提案投票)
+          - 2004-版本声明
+          - 2005-取消提案
+          - 3000-举报多签(举报验证人)
+          - 4000-创建锁仓计划(创建锁仓)
+          - 5000-领取奖励
+      time:
+        description: 交易时间
+        type: integer
+      nonce:
+        description: 交易nonce
+        type: integer
+      gasLimit:
+        description: 能量限制
+        type: integer
+      gasUsed:
+        description: 能量限制
+        type: integer
+      gasPrice:
+        description: 能量价格
+        type: string
+      num:
+        description: 交易所在区块高度
+        type: integer
+      failReason:
+        description: 失败原因
+        type: string
+      toType:
+        description: 此字段表示的是to字段存储的账户类型，前端页面在点击接收方的地址时，根据此字段来决定是跳转到账户详情还是合约详情
+        type: string
+        enum:
+          - 1-钱包地址
+          - 2-合约地址
+          - 3-erc合约地址
+      contractType:
+        description: 合约类型 0-系统合约，1-evm合约 2-wasm合约 3-evm-token
+        type: integer
+      contractAddress:
+        description: 合约地址
+        type: string
+      method:
+        description: 合约调用函数
+        type: string
+  transactionListWithValueResultDetail:
+    type: object
+    description: 交易详情
+    properties:
+      txHash:
+        description: 交易hash
+        type: string
+      from:
+        description: 发送方地址（操作地址）
+        type: string
+      to:
+        description: 接收方地址
+        type: string
+      seq:
+        description: 序号
+        type: integer
+      value:
+        description: 金额(单位:von)
+        type: string
+      actualTxCost:
+        description: 交易费用(单位:von)
+        type: string
+      txType:
+        description: 交易类型
+        type: string
+        enum:
+          - 0-转账
+          - 1-合约发布(合约创建)
+          - 2-合约调用(合约执行)
+          - 21-合约销毁
+          - 4-其他
+          - 5-MPC交易
+          - 6-erc20合约创建
+          - 7-erc20合约执行
+          - 8-erc721合约创建
+          - 9-erc721合约执行
+          - 1000-发起质押 (创建验证人)
+          - 1001-修改质押信息(修改验证人)
+          - 1002-增持质押(增持自由质押)
+          - 1003-撤销质押(退出验证人)
+          - 1004-发起委托 (委托)
+          - 1005-减持/撤销委托(赎回委托)
+          - 2000-提交文本提案 (创建提案)
+          - 2001-提交升级提案(提交提案)
+          - 2002-提交参数提案(提交提案-去除暂时不要)
+          - 2003-给提案投票(提案投票)
+          - 2004-版本声明
+          - 2005-取消提案
+          - 3000-举报多签(举报验证人)
+          - 4000-创建锁仓计划(创建锁仓)
+          - 5000-领取奖励
+      serverTime:
+        description: 服务器时间
+        type: integer
+      timestamp:
+        description: 出块时间
+        type: integer
+      blockNumber:
+        description: 交易所在区块高度
+        type: integer
+      failReason:
+        description: 失败原因
+        type: string
+      receiveType:
+        description: 此字段表示的是to字段存储的账户类型，前端页面在点击接收方的地址时，根据此字段来决定是跳转到账户详情还是合约详情
+        type: string
+        enum:
+          - account-钱包地址
+          - contract-合约地址
+      txReceiptStatus:
+        description: 交易状态 1-成功 0-失败
+        type: string
+  transactionListWithValueResult:
+    type: object
+    properties:
+      errMsg:
+        description: 描述信息
+        type: string
+      code:
+        description: 成功（0），失败则有相关失败码
+        type: integer
+      displayTotalCount:
+        description: 显示总数
+        type: integer
+      totalCount:
+        description: 记录总数
+        type: integer
+      totalPages:
+        description: 总页数
+        type: integer
+      data:
+        type: array
+        items:
+          $ref: '#/definitions/transactionListWithValueResultDetail'
+  gasPriceEstimateDetail:
+    type: object
+    description: 返回gas费用估计
+    properties:
+      health:
+        description: 是否同步到最新
+        type: boolean
+      block_number:
+        description: 区块号
+        type: long
+      block_time:
+        description: 出块时间间隔
+        type: float
+      slow:
+        description: slow 对应的gasprice
+        type: float
+      standard:
+        description: standard 对应的gasprice
+        type: float
+      fast:
+        description: fast 对应的gasprice
+        type: float
+      instant:
+        description: instant 对应的gasprice
+        type: float
+  gasPriceEstimateResult:
+    type: object
+    properties:
+      errMsg:
+        description: 描述信息
+        type: string
+      code:
+        description: 成功（0），失败则有相关失败码
+        type: integer
+      data:
+        type: array
+        items:
+          $ref: '#/definitions/gasPriceEstimateDetail'
+  getGasPriceHistoryGroupByBlockResultDetail:
+    type: object
+    properties:
+      key:
+        description: 区块号
+        type: long
+      doc_count:
+        description: 该区块包含的交易数
+        type: long
+      costSum:
+        description: 该区块 gas 花费 求和
+        type: long
+      costMin:
+        description: 该区块 gas 花费 最小值
+        type: long
+      costAvg:
+        description: 该区块 gas 花费 平均
+        type: long
+      costMax:
+        description: 该区块 gas 花费 最大值
+        type: long
+      gasPriceMin:
+        description: 该区块 gasPrice 平均
+        type: long
+      gasPriceAvg:
+        description: 该区块 gasPrice 平均
+        type: long
+      gasPriceMax:
+        description: 该区块 gasPrice 最大值
+        type: long
+  getGasPriceHistoryGroupByBlockResult:
+    type: object
+    properties:
+      errMsg:
+        description: 描述信息
+        type: string
+      code:
+        description: 成功（0），失败则有相关失败码
+        type: integer
+      data:
+        type: array
+        items:
+          $ref: '#/definitions/getGasPriceHistoryGroupByBlockResultDetail'
+  getCountGroupByGasPriceResultDetail:
+    type: object
+    properties:
+      key:
+        description: gasPrice
+        type: long
+      doc_count:
+        description: 该gasPrice对应的交易的数量（有多少交易使用了该gasPrice）
+        type: long
+  getCountGroupByGasPriceResult:
+    type: object
+    properties:
+      errMsg:
+        description: 描述信息
+        type: string
+      code:
+        description: 成功（0），失败则有相关失败码
+        type: integer
+      data:
+        type: array
+        items:
+          $ref: '#/definitions/getCountGroupByGasPriceResultDetail'
+  getCostGroupByTxTypeResultDetail:
+    type: object
+    properties:
+      key:
+        description: 交易类型
+        type: long
+      doc_count:
+        description: 该交易类型的交易总数
+        type: long
+      costMin:
+        description: 该交易类型 gas 花费 最小值
+        type: long
+      costAvg:
+        description: 该交易类型 gas 花费 平均
+        type: long
+      costMax:
+        description: 该交易类型 gas 花费 最大值
+        type: long
+  getCostGroupByTxTypeResult:
+    type: object
+    properties:
+      errMsg:
+        description: 描述信息
+        type: string
+      code:
+        description: 成功（0），失败则有相关失败码
+        type: integer
+      data:
+        type: array
+        items:
+          $ref: '#/definitions/getCostGroupByTxTypeResultDetail'
+  getPendingTxInfoResultDetail:
+    type: object
+    properties:
+      hash:
+        description: 交易hash
+        type: string
+      value:
+        description: 交易金额
+        type: long
+      gasPrice:
+        description: gas价格
+        type: long
+      gas:
+        description: gas消耗量
+        type: long
+      from:
+        description: 该交易发起人地址
+        type: string
+      to:
+        description: 该交易接收者地址
+        type: string
+  getPendingTxInfoResult:
+    type: object
+    properties:
+      errMsg:
+        description: 描述信息
+        type: string
+      code:
+        description: 成功（0），失败则有相关失败码
+        type: integer
+      data:
+        type: array
+        items:
+          $ref: '#/definitions/getPendingTxInfoResultDetail'
+
   #内置地址
   PageReq:
     type: object
