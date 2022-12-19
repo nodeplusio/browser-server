@@ -23,9 +23,12 @@ build-deploy-dev: #build dev阶段
         - bash /home/kiki/discord-notify_start.sh
         #- export JAVA_HOME=/usr/local/jdk/jdk1.8.0_181
         - sh gradlew build -x test
+        - tar zcvf ./scan-api/build/package/public.tar.gz -C./scan-api/build/package/ public/
         - mv ./scan-api/build/package/scan-api*.jar ./scan-api/build/package/scan-api.jar
         - mv ./scan-agent/build/package/scan-agent*.jar ./scan-agent/build/package/scan-agent.jar
-        - mv ./scan-job/build/package/scan-job*.jar ./scan-job/build/package/scan-job.jar
+        - mv ./scan-job/build/package/scan-job*.jar ./scan-job/build/package/scan-job.jar   
+        - ansible browser-server -m copy -a "src=./scan-api/build/package/public.tar.gz dest=/usr/local/browser-server/scan-api/"
+        - ansible browser-server -m shell -a "cd /usr/local/browser-server/scan-api && tar xf public.tar.gz"
         - ansible browser-server -m copy -a "src=./scan-api/build/package/scan-api.jar dest=/usr/local/browser-server/scan-api/"
         - ansible browser-server -m copy -a "src=./scan-agent/build/package/scan-agent.jar dest=/usr/local/browser-server/scan-agent/"
         - ansible browser-server -m copy -a "src=./scan-job/build/package/scan-job.jar dest=/usr/local/browser-server/scan-job/"
