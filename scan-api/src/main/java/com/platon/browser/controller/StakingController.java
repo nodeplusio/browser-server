@@ -143,28 +143,28 @@ public class StakingController {
      * @return
      */
     @GetMapping("v2/staking/getBlockCountHistoryByNode")
-    public Mono<RespPage<BlockCountHistoryByNodeResp>> getBlockCountHistoryByNode(String nodeid) {
-        return Mono.just(stakingService.getBlockCountHistoryByNode(nodeid));
+    public Mono<RespPage<BlockCountHistoryByNodeResp>> getBlockCountHistoryByNode(String nodeId) {
+        return Mono.just(stakingService.getBlockCountHistoryByNode(nodeId));
     }
 
     /**
      * 2.2.1 节点历史年化率
-     * @param nodeid
+     * @param nodeId
      * @return
      */
     @GetMapping("v2/staking/getDeleAnnualizedRateHistoryByNode")
-    public Mono<RespPage<DeleAnnualizedRateHistoryByNodeResult>> getDeleAnnualizedRateHistoryByNode(String nodeid) {
-        return Mono.just(stakingService.getDeleAnnualizedRateHistoryByNode(nodeid));
+    public Mono<RespPage<DeleAnnualizedRateHistoryByNodeResult>> getDeleAnnualizedRateHistoryByNode(String nodeId) {
+        return Mono.just(stakingService.getDeleAnnualizedRateHistoryByNode(nodeId));
     }
 
     /**
      * 2.2.1 节点历史总质押和总委托
-     * @param nodeid
+     * @param nodeId
      * @return
      */
     @GetMapping("v2/staking/getTotalValueHistoryByNode")
-    public Mono<RespPage<TotalValueHistoryByNodeResultDetail>> getTotalValueHistoryByNode(String nodeid) {
-        return Mono.just(stakingService.getTotalValueHistoryByNode(nodeid));
+    public Mono<RespPage<TotalValueHistoryByNodeResultDetail>> getTotalValueHistoryByNode(String nodeId) {
+        return Mono.just(stakingService.getTotalValueHistoryByNode(nodeId));
     }
 
 }

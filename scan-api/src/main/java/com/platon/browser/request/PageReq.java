@@ -4,10 +4,10 @@
 
 package com.platon.browser.request;
 
-import javax.validation.constraints.NotNull;
-
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+
+import javax.validation.constraints.NotNull;
 
 /**
  * 	分页对象
@@ -45,6 +45,9 @@ public class PageReq {
     }
 
 	public Integer getPageNo() {
+		if (pageNo <= 0) {
+			return 1;
+		}
 		return pageNo;
 	}
 
@@ -53,6 +56,9 @@ public class PageReq {
 	}
 
 	public Integer getPageSize() {
+		if (pageSize <= 0) {
+			return 10;
+		}
 		return pageSize;
 	}
 

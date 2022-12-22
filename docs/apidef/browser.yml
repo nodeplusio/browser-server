@@ -1818,6 +1818,9 @@ definitions:
       unlockNumber:
         description: 解锁的区块高度
         type: integer
+      epoch:
+        description: 锁仓计划周期
+        type: integer
       pageNo:
         description: 页号
         type: integer

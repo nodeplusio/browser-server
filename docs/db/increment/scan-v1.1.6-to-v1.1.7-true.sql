@@ -1,3 +1,8 @@
+ALTER TABLE token
+    ALTER COLUMN `is_support_erc1155` SET DEFAULT '0';
+ALTER TABLE token
+    ALTER COLUMN `is_support_erc1155_metadata` SET DEFAULT '0';
+
 DROP TABLE IF EXISTS `node_history_total_and_stat_delegate_value`;
 CREATE TABLE `node_history_total_and_stat_delegate_value`
 (
