@@ -662,7 +662,7 @@ public class StakingService {
 
         ESQueryBuilderConstructor constructor = new ESQueryBuilderConstructor();
         ESQueryBuilders esQueryBuilders = new ESQueryBuilders().term("nodeId", nodeid)
-                .range("time", "now-330d", "now");
+                .range("time", "now-30d", "now");
         constructor.must(esQueryBuilders);
         constructor.aggregation(byDay);
         try {

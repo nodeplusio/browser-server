@@ -54,7 +54,7 @@ public class GasService {
 
         ESQueryBuilderConstructor constructor = new ESQueryBuilderConstructor();
         constructor.must(new ESQueryBuilders()
-                .range("time", "now-2M", "now"));
+                .range("time", "now-4h", "now"));
         constructor.setDesc("time");
         constructor.aggregation(aggregation);
         constructor.aggregation(percentilesBucketPipelineAggregationBuilder);
@@ -100,7 +100,7 @@ public class GasService {
 
         ESQueryBuilderConstructor constructor = new ESQueryBuilderConstructor();
         constructor.must(new ESQueryBuilders()
-                .range("time", "now-2M", "now"));
+                .range("time", "now-4h", "now"));
         constructor.aggregation(aggregation);
         try {
             Aggregations aggregations = eSTransactionRepository.aggregationSearch(constructor).getAggregations();
@@ -122,7 +122,7 @@ public class GasService {
 
         ESQueryBuilderConstructor constructor = new ESQueryBuilderConstructor();
         constructor.must(new ESQueryBuilders()
-                .range("time", "now-2M", "now"));
+                .range("time", "now-24h", "now"));
         constructor.aggregation(aggregation);
         try {
             Aggregations aggregations = eSTransactionRepository.aggregationSearch(constructor).getAggregations();
@@ -150,7 +150,7 @@ public class GasService {
 
         ESQueryBuilderConstructor constructor = new ESQueryBuilderConstructor();
         constructor.must(new ESQueryBuilders()
-                .range("time", "now-2M", "now"));
+                .range("time", "now-7d", "now"));
         constructor.aggregation(aggregation);
         try {
             Aggregations aggregations = eSTransactionRepository.aggregationSearch(constructor).getAggregations();
