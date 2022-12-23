@@ -39,6 +39,7 @@ public class DelegationLogGenerateService {
         TxBakExample example1 = new TxBakExample();
         example1.createCriteria().andTypeIn(Arrays.asList(1004, 1005))
                 .andIdGreaterThan(maxId);
+        example1.setOrderByClause("id asc");
         PageHelper.startPage(1, 100);
         List<TxBakWithBLOBs> txBakList = txBakMapper.selectByExampleWithBLOBs(example1);
         if (txBakList.isEmpty()) {
