@@ -49,6 +49,9 @@ public class StakingStatsService {
         for (TxBakWithBLOBs txBak : txBakList) {
             TxInfo txInfo = JSON.parseObject(txBak.getInfo(), TxInfo.class);
             String nodeId = txInfo.getNodeId();
+            BigDecimal amount = txInfo.getAmount();
+            if (nodeId == null || amount == null) continue;
+
             NodeHistoryTotalAndStatDelegateValue value = newMap.get(nodeId);
             NodeHistoryTotalAndStatDelegateValue pre = preMap.get(nodeId);
             if (value == null) {
@@ -71,9 +74,6 @@ public class StakingStatsService {
                 }
             }
             value.setDate(statsDay);
-
-            BigDecimal amount = txInfo.getAmount();
-            if (amount == null) continue;
 
             if (txBak.getType() == 1000 || txBak.getType() == 1002) {
                 value.setStatStakingValueCount(value.getStatStakingValueCount() + 1);
@@ -175,6 +175,8 @@ public class StakingStatsService {
             List<RewardNode> list = JSON.parseArray(txBak.getExtra(), RewardNode.class);
             for (RewardNode rewardNode : list) {
                 String nodeId = rewardNode.getNodeId();
+                BigDecimal reward = rewardNode.getReward();
+                if (nodeId == null || reward == null) continue;
                 NodeHistoryDeleAnnualizedRate value = newMap.get(nodeId);
                 if (value == null) {
                     value = new NodeHistoryDeleAnnualizedRate();
@@ -186,7 +188,7 @@ public class StakingStatsService {
                     value.setDeleAnnualizedRateMax(BigDecimal.ZERO);
                     newMap.put(nodeId, value);
                 }
-                value.setDeleReward(value.getDeleReward().add(rewardNode.getReward()));
+                value.setDeleReward(value.getDeleReward().add(reward));
             }
         }
 
