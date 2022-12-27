@@ -23,6 +23,7 @@ public class StakingStatsTask {
         try {
             int day = Convert.toInt(XxlJobHelper.getJobParam(), 1);
             for (int i = day - 1; i >= 0; i--) {
+                XxlJobHelper.log("统计到{}", i);
                 stakingStatsService.statsTotalValueHistory(DateUtils.addDays(new Date(), -i));
             }
             XxlJobHelper.handleSuccess("统计数据成功");
@@ -37,6 +38,7 @@ public class StakingStatsTask {
         try {
             int day = Convert.toInt(XxlJobHelper.getJobParam(), 1);
             for (int i = day - 1; i >= 0; i--) {
+                XxlJobHelper.log("统计到{}", i);
                 stakingStatsService.statsNodeHistoryDeleAnnualizedRate(DateUtils.addDays(new Date(), -i));
             }
             XxlJobHelper.handleSuccess("统计数据成功");

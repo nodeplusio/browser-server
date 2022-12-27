@@ -73,6 +73,8 @@ public class StakingStatsService {
             value.setDate(statsDay);
 
             BigDecimal amount = txInfo.getAmount();
+            if (amount == null) continue;
+
             if (txBak.getType() == 1000 || txBak.getType() == 1002) {
                 value.setStatStakingValueCount(value.getStatStakingValueCount() + 1);
                 value.setStatStakingValueTotal(value.getStatStakingValueTotal().add(amount));
@@ -132,6 +134,7 @@ public class StakingStatsService {
                 }
             }
             if (map.containsKey(value.getNodeId())) {
+                value.setUpdateTime(new Date());
                 nodeHistoryTotalAndStatDelegateValueMapper.updateByPrimaryKey(value);
             } else {
                 nodeHistoryTotalAndStatDelegateValueMapper.insert(value);
@@ -141,6 +144,7 @@ public class StakingStatsService {
             if (!newMap.containsKey(value.getNodeId())) {
                 value.setDate(statsDay);
                 if (map.containsKey(value.getNodeId())) {
+                    value.setUpdateTime(new Date());
                     nodeHistoryTotalAndStatDelegateValueMapper.updateByPrimaryKey(value);
                 } else {
                     nodeHistoryTotalAndStatDelegateValueMapper.insert(value);
@@ -201,6 +205,7 @@ public class StakingStatsService {
             value.setDeleAnnualizedRateMax(deleAnnualizedRate);
             value.setDeleAnnualizedRateMin(deleAnnualizedRate);
             if (rateMap.containsKey(nodeId)) {
+                value.setUpdateTime(new Date());
                 nodeHistoryDeleAnnualizedRateMapper.updateByPrimaryKey(value);
             } else {
                 nodeHistoryDeleAnnualizedRateMapper.insert(value);
