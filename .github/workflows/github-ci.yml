@@ -1,0 +1,35 @@
+name: GitHub Actions
+run-name: ${{ github.actor }} 🚀
+on: 
+ push:
+  tags:
+      - dev-*
+jobs:
+  Explore-GitHub-Actions:
+    runs-on: self-hosted
+    steps:
+      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
+      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
+      - name: List files in the repository
+        run: |
+          ls ${{ github.workspace }}
+          cd ${{ github.workspace }}
+          sh gradlew build -x test
+          tar zcvf ./scan-api/build/package/public.tar.gz -C./scan-api/build/package/ public/
+          mv ./scan-api/build/package/scan-api*.jar ./scan-api/build/package/scan-api.jar
+          mv ./scan-agent/build/package/scan-agent*.jar ./scan-agent/build/package/scan-agent.jar
+          mv ./scan-job/build/package/scan-job*.jar ./scan-job/build/package/scan-job.jar   
+          ansible browser-server -m copy -a "src=./scan-api/build/package/public.tar.gz dest=/usr/local/browser-server/scan-api/"
+          ansible browser-server -m shell -a "cd /usr/local/browser-server/scan-api && tar xf public.tar.gz"
+          ansible browser-server -m copy -a "src=./scan-api/build/package/scan-api.jar dest=/usr/local/browser-server/scan-api/"
+          ansible browser-server -m copy -a "src=./scan-agent/build/package/scan-agent.jar dest=/usr/local/browser-server/scan-agent/"
+          ansible browser-server -m copy -a "src=./scan-job/build/package/scan-job.jar dest=/usr/local/browser-server/scan-job/"
+          ansible browser-server -m shell -a "sudo systemctl restart scan-api.service"
+          ansible browser-server -m shell -a "sudo systemctl restart scan-agent.service"
+          ansible browser-server -m shell -a "sudo systemctl restart scan-job.service"
+
+      - run: echo "🍏 This job's status is ${{ job.status }}."
