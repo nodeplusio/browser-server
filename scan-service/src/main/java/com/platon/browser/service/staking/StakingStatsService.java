@@ -137,6 +137,16 @@ public class StakingStatsService {
                 nodeHistoryTotalAndStatDelegateValueMapper.insert(value);
             }
         }
+        for (NodeHistoryTotalAndStatDelegateValue value : preMap.values()) {
+            if (!newMap.containsKey(value.getNodeId())) {
+                value.setDate(statsDay);
+                if (map.containsKey(value.getNodeId())) {
+                    nodeHistoryTotalAndStatDelegateValueMapper.updateByPrimaryKey(value);
+                } else {
+                    nodeHistoryTotalAndStatDelegateValueMapper.insert(value);
+                }
+            }
+        }
     }
 
     public void statsNodeHistoryDeleAnnualizedRate(Date date) {
