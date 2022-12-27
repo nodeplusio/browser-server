@@ -38,6 +38,7 @@ public class NodeHistoryDeleAnnualizedRateKey {
         deleAnnualizedRateMax("dele_annualized_rate_max", "deleAnnualizedRateMax", "DECIMAL", false),
         deleAnnualizedRateMin("dele_annualized_rate_min", "deleAnnualizedRateMin", "DECIMAL", false),
         deleAnnualizedRateAvg("dele_annualized_rate_avg", "deleAnnualizedRateAvg", "DECIMAL", false),
+        deleReward("dele_reward", "deleReward", "DECIMAL", false),
         createTime("create_time", "createTime", "TIMESTAMP", false),
         updateTime("update_time", "updateTime", "TIMESTAMP", false);
 

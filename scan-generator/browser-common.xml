@@ -42,7 +42,7 @@
             <property name="enableSubPackages" value="true"/>
         </javaClientGenerator>
 
-        <table tableName="delegation_log" domainObjectName="DelegationLog">
+        <table tableName="node_history_dele_annualized_rate" domainObjectName="NodeHistoryDeleAnnualizedRate">
             <columnRenamingRule searchString="^D_" replaceString=""/>
         </table>
     </context>

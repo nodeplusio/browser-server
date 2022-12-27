@@ -695,6 +695,7 @@ CREATE TABLE `node_history_dele_annualized_rate`
     `dele_annualized_rate_max` decimal(65, 18) NOT NULL DEFAULT '0' COMMENT '年化率 最大值',
     `dele_annualized_rate_min` decimal(65, 18) NOT NULL DEFAULT '0' COMMENT '年化率 最小值',
     `dele_annualized_rate_avg` decimal(65, 18) NOT NULL DEFAULT '0' COMMENT '年化率 平均值',
+    `dele_reward`              decimal(65, 18) NOT NULL DEFAULT '0' COMMENT '奖励',
     `create_time`              timestamp       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time`              timestamp       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`node_id`, `date`)

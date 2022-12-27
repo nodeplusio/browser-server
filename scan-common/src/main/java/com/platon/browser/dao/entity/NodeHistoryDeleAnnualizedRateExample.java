@@ -416,6 +416,66 @@ public class NodeHistoryDeleAnnualizedRateExample {
             return (Criteria) this;
         }
 
+        public Criteria andDeleRewardIsNull() {
+            addCriterion("dele_reward is null");
+            return (Criteria) this;
+        }
+
+        public Criteria andDeleRewardIsNotNull() {
+            addCriterion("dele_reward is not null");
+            return (Criteria) this;
+        }
+
+        public Criteria andDeleRewardEqualTo(BigDecimal value) {
+            addCriterion("dele_reward =", value, "deleReward");
+            return (Criteria) this;
+        }
+
+        public Criteria andDeleRewardNotEqualTo(BigDecimal value) {
+            addCriterion("dele_reward <>", value, "deleReward");
+            return (Criteria) this;
+        }
+
+        public Criteria andDeleRewardGreaterThan(BigDecimal value) {
+            addCriterion("dele_reward >", value, "deleReward");
+            return (Criteria) this;
+        }
+
+        public Criteria andDeleRewardGreaterThanOrEqualTo(BigDecimal value) {
+            addCriterion("dele_reward >=", value, "deleReward");
+            return (Criteria) this;
+        }
+
+        public Criteria andDeleRewardLessThan(BigDecimal value) {
+            addCriterion("dele_reward <", value, "deleReward");
+            return (Criteria) this;
+        }
+
+        public Criteria andDeleRewardLessThanOrEqualTo(BigDecimal value) {
+            addCriterion("dele_reward <=", value, "deleReward");
+            return (Criteria) this;
+        }
+
+        public Criteria andDeleRewardIn(List<BigDecimal> values) {
+            addCriterion("dele_reward in", values, "deleReward");
+            return (Criteria) this;
+        }
+
+        public Criteria andDeleRewardNotIn(List<BigDecimal> values) {
+            addCriterion("dele_reward not in", values, "deleReward");
+            return (Criteria) this;
+        }
+
+        public Criteria andDeleRewardBetween(BigDecimal value1, BigDecimal value2) {
+            addCriterion("dele_reward between", value1, value2, "deleReward");
+            return (Criteria) this;
+        }
+
+        public Criteria andDeleRewardNotBetween(BigDecimal value1, BigDecimal value2) {
+            addCriterion("dele_reward not between", value1, value2, "deleReward");
+            return (Criteria) this;
+        }
+
         public Criteria andCreateTimeIsNull() {
             addCriterion("create_time is null");
             return (Criteria) this;

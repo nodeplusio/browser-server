@@ -31,6 +31,7 @@ CREATE TABLE `node_history_dele_annualized_rate`
     `dele_annualized_rate_max` decimal(65, 18) NOT NULL DEFAULT '0' COMMENT '年化率 最大值',
     `dele_annualized_rate_min` decimal(65, 18) NOT NULL DEFAULT '0' COMMENT '年化率 最小值',
     `dele_annualized_rate_avg` decimal(65, 18) NOT NULL DEFAULT '0' COMMENT '年化率 平均值',
+    `dele_reward`              decimal(65, 18) NOT NULL DEFAULT '0' COMMENT '奖励',
     `create_time`              timestamp       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time`              timestamp       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`node_id`, `date`)
@@ -39,11 +40,11 @@ CREATE TABLE `node_history_dele_annualized_rate`
 DROP TABLE IF EXISTS `delegation_log`;
 CREATE TABLE `delegation_log`
 (
-    `id`          bigint(20)   NOT NULL COMMENT 'id',
+    `id`          bigint(20) NOT NULL COMMENT 'id',
     `node_id`     varchar(130) NOT NULL COMMENT '节点id',
-    `time`        timestamp    NULL     DEFAULT NULL COMMENT '交易时间',
+    `time`        timestamp NULL DEFAULT NULL COMMENT '交易时间',
     `hash`        varchar(72)  NOT NULL COMMENT '交易hash',
-    `type`        int(10)               DEFAULT NULL COMMENT '交易类型',
+    `type`        int(10) DEFAULT NULL COMMENT '交易类型',
     `create_time` timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
