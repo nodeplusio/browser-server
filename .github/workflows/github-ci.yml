@@ -1,6 +1,9 @@
 name: GitHub Actions
 run-name: ${{ github.actor }} 🚀
-on: [push]
+on: 
+ push:
+  tags:
+      - dev.*
 jobs:
   Explore-GitHub-Actions:
     runs-on: self-hosted
