@@ -74,8 +74,10 @@
 <update id="batchUpdateFromTask">
 	<foreach collection="list" item="item" index="index" separator="">
 		update `address` set
-			`staking_value` = ${item.stakingValue} , 
-			`delegate_value` = ${item.delegateValue} , 
+			`balance` = ${item.balance} ,
+			`restricting_balance` = ${item.restrictingBalance} ,
+			`staking_value` = ${item.stakingValue} ,
+			`delegate_value` = ${item.delegateValue} ,
 			`redeemed_value` = ${item.redeemedValue} , 
 			`candidate_count` = ${item.candidateCount} , 
 			`delegate_hes` = ${item.delegateHes} , 
