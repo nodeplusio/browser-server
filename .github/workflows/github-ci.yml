@@ -3,7 +3,7 @@ run-name: ${{ github.actor }} 🚀
 on: 
  push:
   tags:
-      - dev.*
+      - dev-*
 jobs:
   Explore-GitHub-Actions:
     runs-on: self-hosted
