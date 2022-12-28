@@ -2290,13 +2290,16 @@ definitions:
     type: object
     properties:
       contract:
-        description: 合约地址（可选）
+        description: 合约地址（必填）
+        type: string
+      ercType:
+        description: 类型:erc20/erc721/erc1155（必填）
         type: string
       pageNo:
-        description: 页数(必填)
+        description: 页数
         type: integer
       pageSize:
-        description: 页大小(必填)
+        description: 页大小
         type: integer
   TokenHolderDetail:
     type: object
