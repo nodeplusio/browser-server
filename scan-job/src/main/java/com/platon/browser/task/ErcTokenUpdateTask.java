@@ -107,9 +107,9 @@ public class ErcTokenUpdateTask {
 
     private static final ExecutorService TOKEN_UPDATE_POOL = Executors.newFixedThreadPool(TOKEN_BATCH_SIZE);
 
-    private static final int HOLDER_BATCH_SIZE = 10;
+    private static final int HOLDER_BATCH_SIZE = 1000;
 
-    private static final ExecutorService HOLDER_UPDATE_POOL = Executors.newFixedThreadPool(HOLDER_BATCH_SIZE);
+    private static final ExecutorService HOLDER_UPDATE_POOL = Executors.newFixedThreadPool(10);
 
     private final Lock lock = new ReentrantLock();
 
@@ -173,6 +173,15 @@ public class ErcTokenUpdateTask {
     }
 
     /**
+     * 全量更新token持有者余额
+     * 每天00:00:00执行一次
+     */
+    @XxlJob("totalUpdateTokenHolderBalance1155")
+    public void totalUpdateTokenHolder1155() {
+        totalUpdateToken1155HolderBalance();
+    }
+
+    /**
      * 更新erc20/erc721持有者余额
      *
      * @param :
@@ -190,6 +199,7 @@ public class ErcTokenUpdateTask {
             List<TokenHolder> batch;
             int page = 0;
             do {
+                long start = System.currentTimeMillis();
                 TokenHolderExample condition = new TokenHolderExample();
                 condition.setOrderByClause(" token_address asc, address asc limit " + page * HOLDER_BATCH_SIZE + "," + HOLDER_BATCH_SIZE);
                 batch = tokenHolderMapper.selectByExample(condition);
@@ -235,6 +245,9 @@ public class ErcTokenUpdateTask {
                     customTokenHolderMapper.batchUpdate(updateParams);
                     TaskUtil.console("更新token持有者余额{}", JSONUtil.toJsonStr(updateParams));
                 }
+                String message = String.format("page:%s,执行时间:%s秒", page, (System.currentTimeMillis() - start)/1000);
+                log.debug(message);
+                XxlJobHelper.log(message);
                 page++;
             } while (!batch.isEmpty());
             XxlJobHelper.log("全量更新token持有者余额成功");
@@ -263,6 +276,7 @@ public class ErcTokenUpdateTask {
             List<Token1155Holder> batch;
             int page = 0;
             do {
+                long start = System.currentTimeMillis();
                 Token1155HolderExample condition = new Token1155HolderExample();
                 condition.setOrderByClause(" id asc limit " + page * HOLDER_BATCH_SIZE + "," + HOLDER_BATCH_SIZE);
                 batch = token1155HolderMapper.selectByExample(condition);
@@ -304,6 +318,9 @@ public class ErcTokenUpdateTask {
                     customToken1155HolderMapper.batchUpdate(updateParams);
                     TaskUtil.console("更新1155token持有者余额{}", JSONUtil.toJsonStr(updateParams));
                 }
+                String message = String.format("page:%s,执行时间:%s秒", page, (System.currentTimeMillis() - start)/1000);
+                log.debug(message);
+                XxlJobHelper.log(message);
                 page++;
             } while (!batch.isEmpty());
             XxlJobHelper.log("全量更新155token持有者余额成功");

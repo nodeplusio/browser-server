@@ -607,14 +607,17 @@ paths:
       summary: Token令牌持有人列表导出
       description: 实现逻辑：|
         查询ES中索引数据<br/>
-        如果传入合约地址，则返回当前合约内的所有转账记录<br/>
-        如果传入用户地址，则返回该地址作为转账扣除这或者接收者的代币转账记录<br/>
-        如果同时存在，则返回地址在当前合约内的转账记录（暂无此场景）<br/>
+        传入合约地址，则返回当前合约内的所有转账记录<br/>
       produces:
         - application/json
       parameters:
         - name: contract
           description: 合约地址
+          in: query
+          type: string
+          required: true
+        - name: ercType
+          description: 类型:erc20/erc721/erc1155（必填）
           in: query
           type: string
           required: true
@@ -644,8 +647,7 @@ paths:
       summary: 持有者的Token令牌列表
       description: 实现逻辑：|
         查询数据库中数据<br/>
-        如果传入合约地址，则返回当前合约内的所有持有人记录<br/>
-        如果传入用户地址，则返回该地址持有的token记录<br/>
+        传入用户地址，则返回该地址持有的token记录<br/>
       produces:
         - application/json
       parameters:
@@ -667,9 +669,7 @@ paths:
       summary: 持有者的Token令牌列表导出
       description: 实现逻辑：|
         查询ES中索引数据<br/>
-        如果传入合约地址，则返回当前合约内的所有转账记录<br/>
-        如果传入用户地址，则返回该地址作为转账扣除这或者接收者的代币转账记录<br/>
-        如果同时存在，则返回地址在当前合约内的转账记录（暂无此场景）<br/>
+        传入用户地址，则返回该地址作为转账扣除这或者接收者的代币转账记录<br/>
       produces:
         - application/json
       parameters:
