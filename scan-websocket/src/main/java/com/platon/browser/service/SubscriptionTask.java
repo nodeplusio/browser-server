@@ -19,16 +19,16 @@ public class SubscriptionTask {
     private ApplicationContext applicationContext;
 
     /**
-     * 推送NewHeads
+     * 推送Subscription
      */
     @Scheduled(cron = "0/1 * * * * ?")
-    public synchronized void block() {
+    public synchronized void subscribe() {
         Map<Session, WebSocketData> map = WebSocketService.getMap();
         for (Map.Entry<Session, WebSocketData> entry : map.entrySet()) {
             for (Map.Entry<String, Request> request : entry.getValue().getRequests().entrySet()) {
                 Object subscriptionType = request.getValue().getParams().get(0);
                 applicationContext.getBean(subscriptionType + "Service", SubscriptionService.class)
-                        .push(entry, request);
+                        .subscribe(entry, request);
             }
         }
     }

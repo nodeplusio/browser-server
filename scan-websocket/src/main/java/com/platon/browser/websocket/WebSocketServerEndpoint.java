@@ -2,6 +2,7 @@ package com.platon.browser.websocket;
 
 import com.alibaba.fastjson.JSON;
 import com.platon.browser.service.WebSocketService;
+import com.platon.browser.util.RemoteEndpointUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -14,6 +15,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import static com.platon.browser.websocket.ErrorCode.PARSE_ERROR;
 
 @Slf4j
 @Component
@@ -73,15 +76,11 @@ public class WebSocketServerEndpoint {
         try {
             request = JSON.parseObject(message, Request.class);
         } catch (Exception e) {
-            Response<Void> response = new Response<>();
-            response.setError(new ErrorResult(-32700, "Parse error"));
-            asyncRemote.sendText(JSON.toJSONString(response));
+            RemoteEndpointUtil.sendError(asyncRemote, PARSE_ERROR);
             return;
         }
         if (request == null || !SUPPORT_METHODS.contains(request.getMethod())) {
-            Response<Void> response = new Response<>();
-            response.setError(new ErrorResult(-32700, "Parse error"));
-            asyncRemote.sendText(JSON.toJSONString(response));
+            RemoteEndpointUtil.sendError(asyncRemote, PARSE_ERROR);
             return;
         }
         WebSocketData webSocketData = WebSocketService.get(session);
