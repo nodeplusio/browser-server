@@ -6,7 +6,6 @@ import com.platon.browser.websocket.Request;
 import com.platon.browser.websocket.WebSocketData;
 import com.platon.protocol.core.methods.response.Transaction;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -59,9 +58,7 @@ public class PendingTransactionsService implements SubscriptionService {
             if (hashesOnly) {
                 send(entry, request, hash);
             } else {
-                TransactionResult transactionResult = new TransactionResult();
-                BeanUtils.copyProperties(transaction, transactionResult);
-                send(entry, request, transactionResult);
+                send(entry, request, new TransactionResult(transaction));
             }
         }
         webSocketData.setHashes(hashes);

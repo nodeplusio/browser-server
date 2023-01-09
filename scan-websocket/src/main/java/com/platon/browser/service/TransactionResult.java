@@ -1,8 +1,14 @@
 package com.platon.browser.service;
 
+import com.platon.protocol.core.methods.response.Transaction;
+import com.platon.utils.Numeric;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.math.BigInteger;
 
 @Data
+@NoArgsConstructor
 public class TransactionResult {
     private String hash;
     private String nonce;
@@ -20,5 +26,27 @@ public class TransactionResult {
     private String raw;
     private String r;
     private String s;
-    private long v;
+    private String v;
+    private String chainId;
+
+    public TransactionResult(Transaction transaction) {
+        hash = transaction.getHash();
+        nonce = transaction.getNonceRaw();
+        blockHash = transaction.getBlockHash();
+        blockNumber = transaction.getBlockNumberRaw();
+        transactionIndex = transaction.getTransactionIndexRaw();
+        from = transaction.getFrom();
+        to = transaction.getTo();
+        value = transaction.getValueRaw();
+        gasPrice = transaction.getGasPriceRaw();
+        gas = transaction.getGasRaw();
+        input = transaction.getInput();
+        creates = transaction.getCreates();
+        publicKey = transaction.getPublicKey();
+        raw = transaction.getRaw();
+        r = transaction.getR();
+        s = transaction.getS();
+        v = Numeric.encodeQuantity(BigInteger.valueOf(transaction.getV()));
+        chainId = Numeric.encodeQuantity(BigInteger.valueOf(transaction.getChainId()));
+    }
 }

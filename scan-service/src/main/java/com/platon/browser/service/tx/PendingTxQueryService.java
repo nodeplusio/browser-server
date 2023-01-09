@@ -27,7 +27,7 @@ public class PendingTxQueryService {
         try {
             Request<?, TxPoolContent> txPoolContent = platOnClient.getWeb3jWrapper().getAdmin().txPoolContent();
             TxPoolContent.TxPoolContentResult result = txPoolContent.send().getResult();
-            Map<String, Map<BigInteger, com.platon.protocol.core.methods.response.Transaction>> resultPending = result.getPending();
+            Map<String, Map<BigInteger, Transaction>> resultPending = result.getPending();
             return resultPending.values()
                     .stream()
                     .map(Map::values)
