@@ -28,6 +28,7 @@ public class TransactionResult {
     private String s;
     private String v;
     private String chainId;
+    private String type = "0x0";
 
     public TransactionResult(Transaction transaction) {
         hash = transaction.getHash();
