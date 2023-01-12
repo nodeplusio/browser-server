@@ -18,7 +18,6 @@ public class BlockResult {
     private String transactionsRoot;
     private String stateRoot;
     private String receiptsRoot;
-    private String author;
     private String miner;
     private String mixHash;
     private String difficulty;
@@ -29,7 +28,6 @@ public class BlockResult {
     private String gasUsed;
     private String timestamp;
     private List<String> uncles;
-    private List<String> sealFields;
 
     public BlockResult(PlatonBlock.Block result) {
         this.number = result.getNumberRaw();
@@ -41,7 +39,6 @@ public class BlockResult {
         this.transactionsRoot = result.getTransactionsRoot();
         this.stateRoot = result.getStateRoot();
         this.receiptsRoot = result.getReceiptsRoot();
-        this.author = result.getAuthor();
         this.miner = result.getMiner();
         this.mixHash = result.getMixHash();
         this.difficulty = result.getDifficultyRaw();
@@ -52,6 +49,5 @@ public class BlockResult {
         this.gasUsed = result.getGasUsedRaw();
         this.timestamp = result.getTimestampRaw();
         this.uncles = result.getUncles();
-        this.sealFields = result.getSealFields();
     }
 }

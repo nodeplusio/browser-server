@@ -21,9 +21,6 @@ public class TransactionResult {
     private String gasPrice;
     private String gas;
     private String input;
-    private String creates;
-    private String publicKey;
-    private String raw;
     private String r;
     private String s;
     private String v;
@@ -42,9 +39,6 @@ public class TransactionResult {
         gasPrice = transaction.getGasPriceRaw();
         gas = transaction.getGasRaw();
         input = transaction.getInput();
-        creates = transaction.getCreates();
-        publicKey = transaction.getPublicKey();
-        raw = transaction.getRaw();
         r = transaction.getR();
         s = transaction.getS();
         v = Numeric.encodeQuantity(BigInteger.valueOf(transaction.getV()));

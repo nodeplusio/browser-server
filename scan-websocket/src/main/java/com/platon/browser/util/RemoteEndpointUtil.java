@@ -8,6 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.websocket.RemoteEndpoint;
 
+import static com.alibaba.fastjson.serializer.SerializerFeature.WriteMapNullValue;
+
 @Slf4j
 public class RemoteEndpointUtil {
 
@@ -19,7 +21,7 @@ public class RemoteEndpointUtil {
 
     public static void send(RemoteEndpoint.Async asyncRemote, Object object) {
         try {
-            asyncRemote.sendText(JSON.toJSONString(object)).get();
+            asyncRemote.sendText(JSON.toJSONString(object, WriteMapNullValue)).get();
         } catch (Exception e) {
             log.error("发送失败", e);
             throw new RuntimeException(e);
