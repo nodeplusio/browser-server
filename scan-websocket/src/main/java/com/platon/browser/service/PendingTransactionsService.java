@@ -1,9 +1,11 @@
 package com.platon.browser.service;
 
 import com.alibaba.fastjson.JSONObject;
+import com.platon.bech32.Bech32;
 import com.platon.browser.service.tx.PendingTxQueryService;
 import com.platon.browser.websocket.Request;
 import com.platon.browser.websocket.WebSocketData;
+import com.platon.parameters.NetworkParameters;
 import com.platon.protocol.core.methods.response.Transaction;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -46,12 +48,13 @@ public class PendingTransactionsService implements SubscriptionService {
         List<Transaction> transactions = pendingTxQueryService.queryPendingTxList();
         List<String> hashes = new ArrayList<>();
         WebSocketData webSocketData = entry.getValue();
+        NetworkParameters.selectPlatON();
         for (Transaction transaction : transactions) {
             String hash = transaction.getHash();
             hashes.add(hash);
             if (webSocketData.getHashes().contains(hash)
-                    || !fromAddressList.isEmpty() && !fromAddressList.contains(transaction.getFrom())
-                    || !toAddressList.isEmpty() && !toAddressList.contains(transaction.getTo())) {
+                    || !fromAddressList.isEmpty() && !fromAddressList.contains(Bech32.addressDecodeHex(transaction.getFrom()))
+                    || !toAddressList.isEmpty() && !toAddressList.contains(Bech32.addressDecodeHex(transaction.getTo()))) {
                 continue;
             }
 

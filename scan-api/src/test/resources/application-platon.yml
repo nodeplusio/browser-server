@@ -35,7 +35,8 @@ spring:
   #Redis键配置
   redis:
     password:
-    host: 52.220.99.128
+#    host: 3.0.14.46
+    host: 127.0.0.1
     port: 6379
 #    cluster:
 #      max-redirects: 3
@@ -64,8 +65,8 @@ spring:
 #      hosts: localhost
       port: 9200
       schema: http
-      username: ENC(VME69JEYLfmUXi3KuDQTWA==)
-      password: ENC(A6E/VrNrulxXUK7GSjlmiN7NqxZV5P6o)
+      username: ENC(BLdOQE7zZ9QkMKpo4varhg==)
+      password: ENC(QcRllEkhtfJ+JFXVB0XUG6vNq+da9Wjr)
     index:
       blockIndexName: ${platon.es-namespace}_block
       transactionIndexName: ${platon.es-namespace}_transaction

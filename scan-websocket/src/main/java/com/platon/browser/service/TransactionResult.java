@@ -1,5 +1,7 @@
 package com.platon.browser.service;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.platon.browser.util.AddressLatToHexSerializer;
 import com.platon.protocol.core.methods.response.Transaction;
 import com.platon.utils.Numeric;
 import lombok.Data;
@@ -15,7 +17,9 @@ public class TransactionResult {
     private String blockHash;
     private String blockNumber;
     private String transactionIndex;
+    @JsonSerialize(using = AddressLatToHexSerializer.class)
     private String from;
+    @JsonSerialize(using = AddressLatToHexSerializer.class)
     private String to;
     private String value;
     private String gasPrice;

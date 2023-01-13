@@ -27,8 +27,15 @@ public class SubscriptionTask {
         for (Map.Entry<Session, WebSocketData> entry : map.entrySet()) {
             for (Map.Entry<String, Request> request : entry.getValue().getRequests().entrySet()) {
                 Object subscriptionType = request.getValue().getParams().get(0);
-                applicationContext.getBean(subscriptionType + "Service", SubscriptionService.class)
-                        .subscribe(entry, request);
+                String name = subscriptionType + "Service";
+                if (applicationContext.containsBean(name)) {
+                    try {
+                        applicationContext.getBean(name, SubscriptionService.class)
+                                .subscribe(entry, request);
+                    } catch (Exception e) {
+                        log.error("推送订阅信息失败", e);
+                    }
+                }
             }
         }
     }

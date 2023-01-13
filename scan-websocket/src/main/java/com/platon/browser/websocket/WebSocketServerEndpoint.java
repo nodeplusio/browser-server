@@ -29,16 +29,10 @@ public class WebSocketServerEndpoint {
 
     private static ApplicationContext applicationContext;
 
-    private static WebSocketService webSocketService;
 
     @Autowired
     public static void setApplicationContext(ApplicationContext applicationContext) {
         WebSocketServerEndpoint.applicationContext = applicationContext;
-    }
-
-    @Autowired
-    public static void setWebSocketService(WebSocketService webSocketService) {
-        WebSocketServerEndpoint.webSocketService = webSocketService;
     }
 
     /**

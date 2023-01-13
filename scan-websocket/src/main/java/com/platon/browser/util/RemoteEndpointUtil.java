@@ -1,14 +1,11 @@
 package com.platon.browser.util;
 
-import com.alibaba.fastjson.JSON;
 import com.platon.browser.websocket.ErrorCode;
 import com.platon.browser.websocket.ErrorResult;
 import com.platon.browser.websocket.Response;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.websocket.RemoteEndpoint;
-
-import static com.alibaba.fastjson.serializer.SerializerFeature.WriteMapNullValue;
 
 @Slf4j
 public class RemoteEndpointUtil {
@@ -21,7 +18,7 @@ public class RemoteEndpointUtil {
 
     public static void send(RemoteEndpoint.Async asyncRemote, Object object) {
         try {
-            asyncRemote.sendText(JSON.toJSONString(object, WriteMapNullValue)).get();
+            asyncRemote.sendText(JsonUtil.toJson(object)).get();
         } catch (Exception e) {
             log.error("发送失败", e);
             throw new RuntimeException(e);
