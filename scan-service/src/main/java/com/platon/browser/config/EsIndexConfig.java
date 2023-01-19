@@ -14,7 +14,10 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix="spring.elasticsearch.index")
 public class EsIndexConfig {
     private String blockIndexName; // 区块索引名称
+    private String blockOriginIndexName; // 区块原始数据索引名称
+    private String logOriginIndexName; // 日志原始数据索引名称
     private String transactionIndexName; // 交易索引名称
+    private String transactionOriginIndexName; // 交易索引名称
     private String delegationIndexName; // 委托索引名称
     private String nodeOptIndexName; // 节点操作日志索引名称
     private String delegationRewardIndexName; // 委托奖励索引名称

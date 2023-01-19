@@ -8,7 +8,10 @@ package com.platon.browser.service.elasticsearch;
 public enum ESKeyEnum {
 
     Block("Block"),
+    BlockOrigin("BlockOrigin"),
+    LogOrigin("LogOrigin"),
     Transaction("Transaction"),
+    TransactionOrigin("TransactionOrigin"),
     NodeOpt("NodeOpt"),
     DelegateReward("DelegateReward"),
     Erc20Tx("Erc20Tx"),

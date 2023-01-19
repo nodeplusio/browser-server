@@ -80,7 +80,7 @@ public abstract class AbstractEsRepository {
             log.debug("template json:{}", json);
             return json;
         } catch (Exception e) {
-            log.warn("解析文件{}出错：{}", tplName, e.getMessage());
+            log.warn("解析文件{}出错：{}", tplName, e.getMessage(), e);
             return "";
         }
     }

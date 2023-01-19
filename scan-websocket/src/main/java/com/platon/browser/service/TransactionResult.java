@@ -1,11 +1,13 @@
 package com.platon.browser.service;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.platon.browser.util.AddressLatToHexSerializer;
+import com.platon.browser.elasticsearch.dto.TransactionOrigin;
+import com.platon.browser.util.BigIntegerToHexSerializer;
+import com.platon.browser.util.LongToHexSerializer;
 import com.platon.protocol.core.methods.response.Transaction;
-import com.platon.utils.Numeric;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.beans.BeanUtils;
 
 import java.math.BigInteger;
 
@@ -15,37 +17,45 @@ public class TransactionResult {
     private String hash;
     private String nonce;
     private String blockHash;
-    private String blockNumber;
+    @JsonSerialize(using = BigIntegerToHexSerializer.class)
+    private BigInteger blockNumber;
     private String transactionIndex;
-    @JsonSerialize(using = AddressLatToHexSerializer.class)
     private String from;
-    @JsonSerialize(using = AddressLatToHexSerializer.class)
     private String to;
-    private String value;
-    private String gasPrice;
-    private String gas;
+    @JsonSerialize(using = BigIntegerToHexSerializer.class)
+    private BigInteger value;
+    @JsonSerialize(using = BigIntegerToHexSerializer.class)
+    private BigInteger gasPrice;
+    @JsonSerialize(using = BigIntegerToHexSerializer.class)
+    private BigInteger gas;
     private String input;
     private String r;
     private String s;
-    private String v;
-    private String chainId;
+    @JsonSerialize(using = LongToHexSerializer.class)
+    private Long v;
+    @JsonSerialize(using = LongToHexSerializer.class)
+    private Long chainId;
     private String type = "0x0";
+
+    public TransactionResult(TransactionOrigin transaction) {
+        BeanUtils.copyProperties(transaction, this);
+    }
 
     public TransactionResult(Transaction transaction) {
         hash = transaction.getHash();
         nonce = transaction.getNonceRaw();
         blockHash = transaction.getBlockHash();
-        blockNumber = transaction.getBlockNumberRaw();
+        blockNumber = transaction.getBlockNumber();
         transactionIndex = transaction.getTransactionIndexRaw();
         from = transaction.getFrom();
         to = transaction.getTo();
-        value = transaction.getValueRaw();
-        gasPrice = transaction.getGasPriceRaw();
-        gas = transaction.getGasRaw();
+        value = transaction.getValue();
+        gasPrice = transaction.getGasPrice();
+        gas = transaction.getGas();
         input = transaction.getInput();
         r = transaction.getR();
         s = transaction.getS();
-        v = Numeric.encodeQuantity(BigInteger.valueOf(transaction.getV()));
-        chainId = Numeric.encodeQuantity(BigInteger.valueOf(transaction.getChainId()));
+        v = transaction.getV();
+        chainId = transaction.getChainId();
     }
 }

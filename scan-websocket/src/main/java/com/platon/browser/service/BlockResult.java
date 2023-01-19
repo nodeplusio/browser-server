@@ -1,15 +1,20 @@
 package com.platon.browser.service;
 
-import com.platon.protocol.core.methods.response.PlatonBlock;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.platon.browser.elasticsearch.dto.BlockOrigin;
+import com.platon.browser.util.BigIntegerToHexSerializer;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.beans.BeanUtils;
 
+import java.math.BigInteger;
 import java.util.List;
 
 @Data
 @NoArgsConstructor
 public class BlockResult {
-    private String number;
+    @JsonSerialize(using = BigIntegerToHexSerializer.class)
+    private BigInteger number;
     private String hash;
     private String parentHash;
     private String nonce;
@@ -20,34 +25,22 @@ public class BlockResult {
     private String receiptsRoot;
     private String miner;
     private String mixHash;
-    private String difficulty;
-    private String totalDifficulty;
+    @JsonSerialize(using = BigIntegerToHexSerializer.class)
+    private BigInteger difficulty;
+    @JsonSerialize(using = BigIntegerToHexSerializer.class)
+    private BigInteger totalDifficulty;
     private String extraData;
-    private String size;
-    private String gasLimit;
-    private String gasUsed;
-    private String timestamp;
+    @JsonSerialize(using = BigIntegerToHexSerializer.class)
+    private BigInteger size;
+    @JsonSerialize(using = BigIntegerToHexSerializer.class)
+    private BigInteger gasLimit;
+    @JsonSerialize(using = BigIntegerToHexSerializer.class)
+    private BigInteger gasUsed;
+    @JsonSerialize(using = BigIntegerToHexSerializer.class)
+    private BigInteger timestamp;
     private List<String> uncles;
 
-    public BlockResult(PlatonBlock.Block result) {
-        this.number = result.getNumberRaw();
-        this.hash = result.getHash();
-        this.parentHash = result.getParentHash();
-        this.nonce = result.getNonceRaw();
-        this.sha3Uncles = result.getSha3Uncles();
-        this.logsBloom = result.getLogsBloom();
-        this.transactionsRoot = result.getTransactionsRoot();
-        this.stateRoot = result.getStateRoot();
-        this.receiptsRoot = result.getReceiptsRoot();
-        this.miner = result.getMiner();
-        this.mixHash = result.getMixHash();
-        this.difficulty = result.getDifficultyRaw();
-        this.totalDifficulty = result.getTotalDifficultyRaw();
-        this.extraData = result.getExtraData();
-        this.size = result.getSizeRaw();
-        this.gasLimit = result.getGasLimitRaw();
-        this.gasUsed = result.getGasUsedRaw();
-        this.timestamp = result.getTimestampRaw();
-        this.uncles = result.getUncles();
+    public BlockResult(BlockOrigin result) {
+        BeanUtils.copyProperties(result, this);
     }
 }

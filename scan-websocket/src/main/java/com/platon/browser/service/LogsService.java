@@ -2,24 +2,19 @@ package com.platon.browser.service;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.platon.browser.client.PlatOnClient;
-import com.platon.browser.elasticsearch.dto.Block;
-import com.platon.browser.service.elasticsearch.EsBlockRepository;
+import com.platon.browser.elasticsearch.dto.LogOrigin;
+import com.platon.browser.service.elasticsearch.EsLogOriginRepository;
 import com.platon.browser.service.elasticsearch.bean.ESResult;
 import com.platon.browser.service.elasticsearch.query.ESQueryBuilderConstructor;
+import com.platon.browser.service.elasticsearch.query.ESQueryBuilders;
 import com.platon.browser.websocket.Request;
 import com.platon.browser.websocket.WebSocketData;
-import com.platon.protocol.core.DefaultBlockParameter;
-import com.platon.protocol.core.methods.request.PlatonFilter;
-import com.platon.protocol.core.methods.response.Log;
-import com.platon.protocol.core.methods.response.PlatonLog;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.websocket.Session;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -30,9 +25,7 @@ import java.util.Map;
 public class LogsService implements SubscriptionService {
 
     @Resource
-    private EsBlockRepository esBlockRepository;
-    @Resource
-    private PlatOnClient platOnClient;
+    private EsLogOriginRepository esLogOriginRepository;
 
     @Override
     public void subscribe(Map.Entry<Session, WebSocketData> entry, Map.Entry<String, Request> request) {
@@ -60,32 +53,25 @@ public class LogsService implements SubscriptionService {
         }
         WebSocketData value = entry.getValue();
         ESQueryBuilderConstructor blockConstructor = new ESQueryBuilderConstructor();
-        blockConstructor.setDesc("num");
+        int pageSize;
+        String blockNumberFieldName = "blockNumber";
+        if (value.getBlockNum() == null) {
+            pageSize = 1;
+            blockConstructor.setDesc(blockNumberFieldName);
+        } else {
+            blockConstructor.must(new ESQueryBuilders().range(blockNumberFieldName, value.getBlockNum() + 1, null)).setAsc(blockNumberFieldName);
+            pageSize = 10;
+        }
         try {
-            ESResult<Block> blockList = esBlockRepository.search(blockConstructor, Block.class, 1, 1);
+            ESResult<LogOrigin> blockList = esLogOriginRepository.search(blockConstructor, LogOrigin.class, 1, pageSize);
             if (blockList.getRsData().isEmpty()) {
                 return;
             }
-            Long num = blockList.getRsData().get(0).getNum();
-            DefaultBlockParameter toBlock = DefaultBlockParameter.valueOf(BigInteger.valueOf(num));
-            DefaultBlockParameter fromBlock;
-            if (value.getBlockNum() == null) {
-                fromBlock = toBlock;
-            } else {
-                if (value.getBlockNum() >= num) {
-                    return;
-                }
-                fromBlock = DefaultBlockParameter.valueOf(BigInteger.valueOf(value.getBlockNum() + 1));
-            }
-            PlatonFilter platonFilter = new PlatonFilter(fromBlock, toBlock, addressList);
-            List<PlatonLog.LogResult> result = platOnClient.getWeb3jWrapper().getWeb3j()
-                    .platonGetLogs(platonFilter)
-                    .send().getResult();
-            for (PlatonLog.LogResult logResult : result) {
-                Log log = (Log) logResult.get();
-                List<String> topics = log.getTopics();
+            Long num = blockList.getRsData().get(0).getBlockNumber().longValue();
+            for (LogOrigin logOrigin : blockList.getRsData()) {
+                List<String> topics = logOrigin.getTopics();
                 if (matchTopic(topicList, topics)) {
-                    send(entry, request, new LogResult(log));
+                    send(entry, request, new LogResult(logOrigin));
                 }
             }
             value.setBlockNum(num);

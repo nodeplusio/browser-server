@@ -19,6 +19,9 @@ spring:
       password: ENC(A6E/VrNrulxXUK7GSjlmiN7NqxZV5P6o)
     index:
       blockIndexName: ${platon.es-namespace}_block
+      blockOriginIndexName: ${platon.es-namespace}_block_origin
+      logOriginIndexName: ${platon.es-namespace}_log_origin
+      transactionOriginIndexName: ${platon.es-namespace}_transaction_origin
       transactionIndexName: ${platon.es-namespace}_transaction
       delegationIndexName: ${platon.es-namespace}_delegation
       nodeOptIndexName: ${platon.es-namespace}_nodeopt

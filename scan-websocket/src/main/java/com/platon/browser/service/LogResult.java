@@ -1,33 +1,38 @@
 package com.platon.browser.service;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.platon.browser.util.AddressLatToHexSerializer;
-import com.platon.protocol.core.methods.response.Log;
+import com.platon.browser.elasticsearch.dto.LogOrigin;
+import com.platon.browser.util.BigIntegerToHexSerializer;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
+import java.math.BigInteger;
 import java.util.List;
 
 @Data
+@NoArgsConstructor
 public class LogResult {
     private boolean removed;
-    private String logIndex;
-    private String transactionIndex;
+    @JsonSerialize(using = BigIntegerToHexSerializer.class)
+    private BigInteger logIndex;
+    @JsonSerialize(using = BigIntegerToHexSerializer.class)
+    private BigInteger transactionIndex;
     private String transactionHash;
     private String blockHash;
-    private String blockNumber;
-    @JsonSerialize(using = AddressLatToHexSerializer.class)
+    @JsonSerialize(using = BigIntegerToHexSerializer.class)
+    private BigInteger blockNumber;
     private String address;
     private String data;
     private List<String> topics;
 
-    public LogResult(Log log) {
+    public LogResult(LogOrigin log) {
         this.removed = log.isRemoved();
-        this.logIndex = log.getLogIndexRaw();
-        this.transactionIndex = log.getTransactionIndexRaw();
+        this.logIndex = log.getLogIndex();
+        this.transactionIndex = log.getTransactionIndex();
         this.transactionHash = log.getTransactionHash();
         this.blockHash = log.getBlockHash();
         this.removed = log.isRemoved();
-        this.blockNumber = log.getBlockNumberRaw();
+        this.blockNumber = log.getBlockNumber();
         this.address = log.getAddress();
         this.data = log.getData();
         this.topics = log.getTopics();
