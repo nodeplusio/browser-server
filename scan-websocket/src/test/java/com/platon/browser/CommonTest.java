@@ -27,7 +27,7 @@ public class CommonTest {
     public static void main(String[] args) throws IOException {
         NetworkParameters.selectPlatON();
         Credentials credentials = Credentials.create("0x9f63d041faacfad2a547a6db83f4466b3bd127e3537612769dbb3c63306c363b");
-        Web3j web3j = Web3j.build(new HttpService("http://18.138.163.64:6789"));
+        Web3j web3j = Web3j.build(new HttpService("http://13.229.172.149:6789"));
         String address = "lat10qhhr8xws4f3xnal2a5pn834xsmmtjx3xstwlk";
         Request<?, PlatonGetBalance> request = web3j.platonGetBalance(address, DefaultBlockParameterName.LATEST);
         BigInteger req = request.send().getBalance();

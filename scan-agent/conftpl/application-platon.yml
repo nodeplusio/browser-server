@@ -121,7 +121,7 @@ platon:
     protocol: HTTP
 #    protocol: WS
 #    addresses: 128.199.230.78:6789
-    addresses: 18.138.163.64:6789
+    addresses: 13.229.172.149:6789
 #    addresses: openapi2.platon.network/rpc
 #    addresses: devnet2openapi.platon.network/rpc
   # 质押节点统计年化率最多取多少个连续周期

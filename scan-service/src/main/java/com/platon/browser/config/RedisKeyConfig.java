@@ -16,4 +16,6 @@ public class RedisKeyConfig {
 	private String erc20Tx; // erc20交易
 	private String erc721Tx; // erc721交易
 	private String erc1155Tx; // erc1155交易
+	private String proxyRequestChannel;
+	private String pushData;
 }

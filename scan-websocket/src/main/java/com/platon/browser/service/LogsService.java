@@ -1,24 +1,26 @@
 package com.platon.browser.service;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.platon.browser.config.RedisKeyConfig;
 import com.platon.browser.elasticsearch.dto.LogOrigin;
 import com.platon.browser.service.elasticsearch.EsLogOriginRepository;
 import com.platon.browser.service.elasticsearch.bean.ESResult;
 import com.platon.browser.service.elasticsearch.query.ESQueryBuilderConstructor;
 import com.platon.browser.service.elasticsearch.query.ESQueryBuilders;
-import com.platon.browser.websocket.Request;
-import com.platon.browser.websocket.WebSocketData;
+import com.platon.browser.websocket.WebSocketChannelData;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import javax.websocket.Session;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @Slf4j
@@ -26,10 +28,16 @@ public class LogsService implements SubscriptionService {
 
     @Resource
     private EsLogOriginRepository esLogOriginRepository;
+    @Resource
+    private RedisKeyConfig redisKeyConfig;
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
+    @Resource
+    private WebSocketService webSocketService;
 
     @Override
-    public void subscribe(Map.Entry<Session, WebSocketData> entry, Map.Entry<String, Request> request) {
-        List<Object> requestParam = request.getValue().getParams();
+    public void subscribe(WebSocketChannelData webSocketData) {
+        List<Object> requestParam = webSocketData.getRequest().getParams();
         List<String> addressList = new ArrayList<>();
         List<List<String>> topicList = new ArrayList<>();
         if (requestParam.size() > 1) {
@@ -51,15 +59,14 @@ public class LogsService implements SubscriptionService {
                 }
             }
         }
-        WebSocketData value = entry.getValue();
         ESQueryBuilderConstructor blockConstructor = new ESQueryBuilderConstructor();
         int pageSize;
         String blockNumberFieldName = "blockNumber";
-        if (value.getBlockNum() == null) {
+        if (webSocketData.getBlockNum() == null) {
             pageSize = 1;
             blockConstructor.setDesc(blockNumberFieldName);
         } else {
-            blockConstructor.must(new ESQueryBuilders().range(blockNumberFieldName, value.getBlockNum() + 1, null)).setAsc(blockNumberFieldName);
+            blockConstructor.must(new ESQueryBuilders().range(blockNumberFieldName, webSocketData.getBlockNum() + 1, null)).setAsc(blockNumberFieldName);
             pageSize = 10;
         }
         try {
@@ -71,10 +78,12 @@ public class LogsService implements SubscriptionService {
             for (LogOrigin logOrigin : blockList.getRsData()) {
                 List<String> topics = logOrigin.getTopics();
                 if (matchTopic(topicList, topics)) {
-                    send(entry, request, new LogResult(logOrigin));
+                    webSocketService.send(webSocketData, new LogResult(logOrigin));
                 }
             }
-            value.setBlockNum(num);
+            webSocketData.setBlockNum(num);
+            HashOperations<String, Object, Object> hashOperations = redisTemplate.opsForHash();
+            hashOperations.put(redisKeyConfig.getPushData(), webSocketData.getRequestHash(), JSON.toJSONString(webSocketData));
         } catch (IOException e) {
             log.error("查询es异常", e);
         }

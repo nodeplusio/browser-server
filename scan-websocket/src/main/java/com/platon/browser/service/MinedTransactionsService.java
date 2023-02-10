@@ -1,22 +1,24 @@
 package com.platon.browser.service;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.platon.browser.config.RedisKeyConfig;
 import com.platon.browser.elasticsearch.dto.TransactionOrigin;
 import com.platon.browser.service.elasticsearch.EsTransactionOriginRepository;
 import com.platon.browser.service.elasticsearch.bean.ESResult;
 import com.platon.browser.service.elasticsearch.query.ESQueryBuilderConstructor;
 import com.platon.browser.service.elasticsearch.query.ESQueryBuilders;
-import com.platon.browser.websocket.Request;
-import com.platon.browser.websocket.WebSocketData;
+import com.platon.browser.websocket.WebSocketChannelData;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import javax.websocket.Session;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @Slf4j
@@ -24,10 +26,16 @@ public class MinedTransactionsService implements SubscriptionService {
 
     @Resource
     private EsTransactionOriginRepository esTransactionOriginRepository;
+    @Resource
+    private RedisKeyConfig redisKeyConfig;
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
+    @Resource
+    private WebSocketService webSocketService;
 
     @Override
-    public void subscribe(Map.Entry<Session, WebSocketData> entry, Map.Entry<String, Request> request) {
-        List<Object> requestParam = request.getValue().getParams();
+    public void subscribe(WebSocketChannelData webSocketData) {
+        List<Object> requestParam = webSocketData.getRequest().getParams();
         List<MinedTransactionsAddress> addresses = new ArrayList<>();
         Boolean hashesOnly = false;
         if (requestParam.size() > 1) {
@@ -36,15 +44,14 @@ public class MinedTransactionsService implements SubscriptionService {
             hashesOnly = minedTransactionsParam.getHashesOnly();
             addresses = minedTransactionsParam.getAddresses();
         }
-        WebSocketData value = entry.getValue();
         ESQueryBuilderConstructor blockConstructor = new ESQueryBuilderConstructor();
         int pageSize;
         String blockNumberFieldName = "blockNumber";
-        if (value.getBlockNum() == null) {
+        if (webSocketData.getBlockNum() == null) {
             pageSize = 1;
             blockConstructor.setDesc(blockNumberFieldName);
         } else {
-            blockConstructor.must(new ESQueryBuilders().range(blockNumberFieldName, value.getBlockNum() + 1, null)).setAsc(blockNumberFieldName);
+            blockConstructor.must(new ESQueryBuilders().range(blockNumberFieldName, webSocketData.getBlockNum() + 1, null)).setAsc(blockNumberFieldName);
             pageSize = 10;
         }
         try {
@@ -60,13 +67,15 @@ public class MinedTransactionsService implements SubscriptionService {
                     MinedTransactionOnlyHash minedTransactionOnlyHash = new MinedTransactionOnlyHash();
                     minedTransactionOnlyHash.setHash(transaction.getHash());
                     minedTransactionResult.setTransaction(minedTransactionOnlyHash);
-                    send(entry, request, transaction.getHash());
+                    webSocketService.send(webSocketData, transaction.getHash());
                 } else {
                     MinedTransactionResult<TransactionResult> minedTransactionResult = new MinedTransactionResult<>();
                     minedTransactionResult.setTransaction(new TransactionResult(transaction));
-                    send(entry, request, minedTransactionResult);
+                    webSocketService.send(webSocketData, minedTransactionResult);
                 }
-                value.setBlockNum(transaction.getBlockNumber().longValue());
+                webSocketData.setBlockNum(transaction.getBlockNumber().longValue());
+                HashOperations<String, Object, Object> hashOperations = redisTemplate.opsForHash();
+                hashOperations.put(redisKeyConfig.getPushData(), webSocketData.getRequestHash(), JSON.toJSONString(webSocketData));
             }
         } catch (IOException e) {
             log.error("查询es异常", e);

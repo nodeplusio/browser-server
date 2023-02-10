@@ -45,7 +45,9 @@ public class TransactionResult {
         hash = transaction.getHash();
         nonce = transaction.getNonceRaw();
         blockHash = transaction.getBlockHash();
-        blockNumber = transaction.getBlockNumber();
+        if (transaction.getBlockNumberRaw() != null) {
+            blockNumber = transaction.getBlockNumber();
+        }
         transactionIndex = transaction.getTransactionIndexRaw();
         from = transaction.getFrom();
         to = transaction.getTo();

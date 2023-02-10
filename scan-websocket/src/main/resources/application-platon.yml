@@ -44,6 +44,9 @@ spring:
 #    cluster:
 #      max-redirects: 3
 #      nodes: 127.0.0.1:6379
+    redisson:
+      address: redis://127.0.0.1:6379
+#      password:
     key:
       #最多存储多少条数据
       max-item: 500000
@@ -61,11 +64,13 @@ spring:
       erc721Tx: ${platon.redis-namespace}:erc721Tx
       #erc1155交易
       erc1155Tx: ${platon.redis-namespace}:erc1155Tx
+      proxyRequestChannel: proxy:${profile}:requestChannel
+      pushData:  ${platon.redis-namespace}:pushData
   #ES索引配置
   elasticsearch:
     high-level-client:
-#      hosts: 52.220.99.128
-      hosts: 127.0.0.1
+      hosts: 52.220.99.128
+#      hosts: 127.0.0.1
       port: 9200
       schema: http
       username: ENC(BLdOQE7zZ9QkMKpo4varhg==)
@@ -132,7 +137,7 @@ platon:
 #    addresses: 192.168.9.139:7789
 #    addresses: openapi2.platon.network/rpc
 #    addresses: 128.199.230.78:6789
-    addresses: 18.138.163.64:6789
+    addresses: 13.229.172.149:6789
   #    addresses: 34.93.120.9:6790,34.85.65.222:6790
   # 质押节点统计年化率最多取多少个连续周期
   maxSettlePeriodCount4AnnualizedRateStat: 4

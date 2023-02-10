@@ -129,7 +129,7 @@ platon:
 #    addresses: 192.168.9.139:7789
 #    addresses: openapi2.platon.network/rpc
 #    addresses: 128.199.230.78:6789
-    addresses: 18.138.163.64:6789
+    addresses: 13.229.172.149:6789
   #    addresses: 34.93.120.9:6790,34.85.65.222:6790
   # 质押节点统计年化率最多取多少个连续周期
   maxSettlePeriodCount4AnnualizedRateStat: 4
