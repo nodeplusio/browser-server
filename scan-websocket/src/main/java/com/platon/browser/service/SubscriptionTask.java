@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.time.Duration;
+import java.util.Date;
 
 @Component
 @Slf4j
@@ -76,6 +77,7 @@ public class SubscriptionTask {
             hashOperations.delete(redisKeyConfig.getPushData(), webSocketChannelData.getRequestHash());
             return;
         }
+        webSocketChannelData.setDataTime(new Date().getTime());
         Object subscriptionType = request.getParams().get(0);
         String name = subscriptionType + "Service";
         if (applicationContext.containsBean(name)) {

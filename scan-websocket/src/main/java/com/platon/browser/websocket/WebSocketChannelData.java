@@ -19,4 +19,6 @@ public class WebSocketChannelData {
     private Long blockNum;
 
     private List<String> hashes = new ArrayList<>();
+
+    private long dataTime;
 }
