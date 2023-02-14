@@ -129,6 +129,7 @@ public class SubscriptionTask {
                             continue;
                         }
                         if (System.currentTimeMillis() - webSocketData.getDataTime() > delayMs) {
+                            log.debug("重新推送的key:{}", key1);
                             operations.delete(key, key1);
                             listOperations.leftPush(redisKeyConfig.getProxyRequestChannel(), s);
                         }
@@ -145,6 +146,7 @@ public class SubscriptionTask {
      */
     @Scheduled(cron = "0/1 * * * * ?")
     public void send() {
+        long dataTime = System.currentTimeMillis();
         HashOperations<String, String, String> operations = redisTemplate.opsForHash();
         for (String key : operations.keys(pushDataKey)) {
             try {
@@ -158,6 +160,7 @@ public class SubscriptionTask {
                 if (applicationContext.containsBean(name)) {
                     SubscriptionService service = applicationContext.getBean(name, SubscriptionService.class);
                     service.subscribe(webSocketData);
+                    webSocketData.setDataTime(dataTime);
                     operations.put(pushDataKey, key, JsonUtil.toJson(webSocketData));
                 }
             } catch (Exception e) {
