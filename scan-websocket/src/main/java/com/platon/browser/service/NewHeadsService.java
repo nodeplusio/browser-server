@@ -30,8 +30,10 @@ public class NewHeadsService implements SubscriptionService {
 
     @Override
     public void subscribe(WebSocketData webSocketData) {
+        long s = System.currentTimeMillis();
         if (rsData == null) {
             rsData = queryData(webSocketData);
+            log.debug("queryData 耗时:{} ms", System.currentTimeMillis() - s);
         }
         Long blockNumber = ESQueryBuilderConstructorBuilder.getBlockNumber(webSocketData);
         for (BlockOrigin blockOrigin : rsData) {
@@ -39,7 +41,9 @@ public class NewHeadsService implements SubscriptionService {
             if (blockNumber != null && number <= blockNumber) {
                 continue;
             }
+            s = System.currentTimeMillis();
             webSocketService.send(webSocketData, new BlockResult(blockOrigin));
+            log.debug("webSocketService.send 耗时:{} ms", System.currentTimeMillis() - s);
             webSocketData.setLastPushData("" + number);
         }
     }

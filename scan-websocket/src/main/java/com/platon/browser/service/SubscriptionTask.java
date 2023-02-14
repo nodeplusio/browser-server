@@ -159,7 +159,9 @@ public class SubscriptionTask {
                 String name = subscriptionType + "Service";
                 if (applicationContext.containsBean(name)) {
                     SubscriptionService service = applicationContext.getBean(name, SubscriptionService.class);
+                    long s = System.currentTimeMillis();
                     service.subscribe(webSocketData);
+                    log.debug("推送单个Subscription耗时:{} ms", System.currentTimeMillis() - s);
                     webSocketData.setDataTime(dataTime);
                     operations.put(pushDataKey, key, JsonUtil.toJson(webSocketData));
                 }
@@ -167,6 +169,7 @@ public class SubscriptionTask {
                 log.error("推送订阅信息失败", e);
             }
         }
+        log.debug("推送全部Subscription耗时:{} ms", System.currentTimeMillis() - dataTime);
     }
 
 }
