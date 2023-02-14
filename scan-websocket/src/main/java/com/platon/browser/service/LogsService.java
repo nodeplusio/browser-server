@@ -1,19 +1,14 @@
 package com.platon.browser.service;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.platon.browser.config.RedisKeyConfig;
 import com.platon.browser.elasticsearch.dto.LogOrigin;
 import com.platon.browser.service.elasticsearch.EsLogOriginRepository;
 import com.platon.browser.service.elasticsearch.bean.ESResult;
 import com.platon.browser.service.elasticsearch.query.ESQueryBuilderConstructor;
-import com.platon.browser.service.elasticsearch.query.ESQueryBuilders;
-import com.platon.browser.websocket.WebSocketChannelData;
+import com.platon.browser.websocket.WebSocketData;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.HashOperations;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -22,21 +17,21 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.platon.browser.service.ESQueryBuilderConstructorBuilder.buildBlockConstructor;
+
 @Service
+@Scope("prototype")
 @Slf4j
 public class LogsService implements SubscriptionService {
 
     @Resource
     private EsLogOriginRepository esLogOriginRepository;
     @Resource
-    private RedisKeyConfig redisKeyConfig;
-    @Autowired
-    private RedisTemplate<String, String> redisTemplate;
-    @Resource
     private WebSocketService webSocketService;
+    private List<LogOrigin> rsData = null;
 
     @Override
-    public void subscribe(WebSocketChannelData webSocketData) {
+    public void subscribe(WebSocketData webSocketData) {
         List<Object> requestParam = webSocketData.getRequest().getParams();
         List<String> addressList = new ArrayList<>();
         List<List<String>> topicList = new ArrayList<>();
@@ -59,34 +54,31 @@ public class LogsService implements SubscriptionService {
                 }
             }
         }
-        ESQueryBuilderConstructor blockConstructor = new ESQueryBuilderConstructor();
-        int pageSize;
-        String blockNumberFieldName = "blockNumber";
-        if (webSocketData.getBlockNum() == null) {
-            pageSize = 1;
-            blockConstructor.setDesc(blockNumberFieldName);
-        } else {
-            blockConstructor.must(new ESQueryBuilders().range(blockNumberFieldName, webSocketData.getBlockNum() + 1, null)).setAsc(blockNumberFieldName);
-            pageSize = 10;
+        if (rsData == null) {
+            rsData = queryData(webSocketData);
         }
+        Long blockNumber = ESQueryBuilderConstructorBuilder.getBlockNumber(webSocketData);
+        for (LogOrigin logOrigin : rsData) {
+            long number = logOrigin.getBlockNumber().longValue();
+            if (blockNumber != null && number <= blockNumber) {
+                continue;
+            }
+            if (matchTopic(topicList, logOrigin.getTopics())) {
+                webSocketService.send(webSocketData, new LogResult(logOrigin));
+            }
+            webSocketData.setLastPushData("" + number);
+        }
+    }
+
+    public List<LogOrigin> queryData(WebSocketData webSocketData) {
+        ESQueryBuilderConstructor blockConstructor = buildBlockConstructor(webSocketData, "blockNumber");
         try {
-            ESResult<LogOrigin> blockList = esLogOriginRepository.search(blockConstructor, LogOrigin.class, 1, pageSize);
-            if (blockList.getRsData().isEmpty()) {
-                return;
-            }
-            Long num = blockList.getRsData().get(0).getBlockNumber().longValue();
-            for (LogOrigin logOrigin : blockList.getRsData()) {
-                List<String> topics = logOrigin.getTopics();
-                if (matchTopic(topicList, topics)) {
-                    webSocketService.send(webSocketData, new LogResult(logOrigin));
-                }
-            }
-            webSocketData.setBlockNum(num);
-            HashOperations<String, Object, Object> hashOperations = redisTemplate.opsForHash();
-            hashOperations.put(redisKeyConfig.getPushData(), webSocketData.getRequestHash(), JSON.toJSONString(webSocketData));
+            ESResult<LogOrigin> blockList = esLogOriginRepository.search(blockConstructor, LogOrigin.class, 1, blockConstructor.getSize());
+            return blockList.getRsData();
         } catch (IOException e) {
             log.error("查询es异常", e);
         }
+        return new ArrayList<>();
     }
 
     private boolean matchTopic(List<List<String>> topicParamList, List<String> topics) {

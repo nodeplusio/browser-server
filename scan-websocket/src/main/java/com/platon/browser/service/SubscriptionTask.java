@@ -2,22 +2,33 @@ package com.platon.browser.service;
 
 import com.alibaba.fastjson.JSON;
 import com.platon.browser.config.RedisKeyConfig;
+import com.platon.browser.util.JsonUtil;
 import com.platon.browser.websocket.Request;
-import com.platon.browser.websocket.WebSocketChannelData;
+import com.platon.browser.websocket.WebSocketData;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.time.Duration;
-import java.util.Date;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Component
 @Slf4j
@@ -32,20 +43,100 @@ public class SubscriptionTask {
     private RedisKeyConfig redisKeyConfig;
     @Resource
     private RedissonClient redissonClient;
+    private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor();
+    @Value("${server.port}")
+    private Integer port;
+    @Value("${ws-send.delay-ms:30000}")
+    private long delayMs;
+
+    private String pushDataKey;
+
+    @PostConstruct
+    public void init() {
+        try {
+            InetAddress address = InetAddress.getLocalHost();
+            String ipPort = ":" + address.getHostAddress() + ":" + port;
+            pushDataKey = redisKeyConfig.getPushData() + ipPort;
+        } catch (UnknownHostException e) {
+            log.error("获取ip错误", e);
+            pushDataKey = redisKeyConfig.getPushData();
+        }
+    }
 
     /**
      * 订阅Subscription
      */
-    @Scheduled(cron = "0/1 * * * * ?")
-    public void subscribe() {
-        ListOperations<String, String> listOperations = redisTemplate.opsForList();
-        while (true){
-            log.debug("订阅Subscription");
-            String s = listOperations.rightPop(redisKeyConfig.getProxyRequestChannel(), Duration.ofSeconds(1));
-            if (s == null) {
-                continue;
+    @PostConstruct
+    void subscribe() {
+        EXECUTOR.submit(() -> {
+            ListOperations<String, String> listOperations = redisTemplate.opsForList();
+            while (true) {
+                log.debug("订阅Subscription");
+                String s = listOperations.rightPop(redisKeyConfig.getProxyRequestChannel(), Duration.ofSeconds(1));
+                if (s == null) {
+                    continue;
+                }
+                WebSocketData webSocketData = JSON.parseObject(s, WebSocketData.class);
+                Request request = webSocketData.getRequest();
+                HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
+                if (ETH_UNSUBSCRIBE.equals(request.getMethod())) {
+                    hashOperations.delete(pushDataKey, webSocketData.getRequestHash());
+                } else {
+                    webSocketData.setDataTime(System.currentTimeMillis());
+                    hashOperations.put(pushDataKey, webSocketData.getRequestHash(), s);
+                }
             }
-            send(s);
+        });
+    }
+
+    /**
+     * 容器关闭时转移推送请求
+     */
+    @Bean
+    ApplicationListener<ContextClosedEvent> contextClosedEventApplicationListener() {
+        return event -> {
+            EXECUTOR.shutdownNow();
+            ListOperations<String, String> listOperations = redisTemplate.opsForList();
+            HashOperations<String, String, String> operations = redisTemplate.opsForHash();
+            Map<String, String> entries = operations.entries(pushDataKey);
+            log.debug("需要转移的请求数量{}", entries.size());
+            for (Map.Entry<String, String> entry : entries.entrySet()) {
+                listOperations.leftPush(redisKeyConfig.getProxyRequestChannel(), entry.getValue());
+                operations.delete(pushDataKey, entry.getKey());
+            }
+        };
+    }
+
+    /**
+     * 监控推送
+     */
+    @Scheduled(cron = "0/10 * * * * ?")
+    public void monitor() {
+        RLock lock = redissonClient.getLock("PushDelayMonitor");
+        try {
+            ListOperations<String, String> listOperations = redisTemplate.opsForList();
+            HashOperations<String, String, String> operations = redisTemplate.opsForHash();
+            Set<String> keys = redisTemplate.keys(redisKeyConfig.getPushData() + "*");
+            if (keys == null) {
+                return;
+            }
+            for (String key : keys) {
+                if (!key.equals(pushDataKey)) {
+                    for (String key1 : operations.keys(key)) {
+                        String s = operations.get(key, key1);
+                        WebSocketData webSocketData = JSON.parseObject(s, WebSocketData.class);
+                        if (webSocketData == null) {
+                            continue;
+                        }
+                        if (System.currentTimeMillis() - webSocketData.getDataTime() > delayMs) {
+                            operations.delete(key, key1);
+                            listOperations.leftPush(redisKeyConfig.getProxyRequestChannel(), s);
+                        }
+                    }
+                }
+            }
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -55,35 +146,20 @@ public class SubscriptionTask {
     @Scheduled(cron = "0/1 * * * * ?")
     public void send() {
         HashOperations<String, String, String> operations = redisTemplate.opsForHash();
-        for (Object key : operations.keys(redisKeyConfig.getPushData())) {
-            RLock pushDataLock = redissonClient.getLock("PushDataLock");
+        for (String key : operations.keys(pushDataKey)) {
             try {
-                pushDataLock.lock();
-                String s = operations.get(redisKeyConfig.getPushData(), key);
-                send(s);
-            } catch (Exception e) {
-                log.error("推送{}数据失败", key, e);
-            } finally {
-                pushDataLock.unlock();
-            }
-        }
-    }
-
-    private void send(String s) {
-        WebSocketChannelData webSocketChannelData = JSON.parseObject(s, WebSocketChannelData.class);
-        Request request = webSocketChannelData.getRequest();
-        if (ETH_UNSUBSCRIBE.equals(request.getMethod())) {
-            HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
-            hashOperations.delete(redisKeyConfig.getPushData(), webSocketChannelData.getRequestHash());
-            return;
-        }
-        webSocketChannelData.setDataTime(new Date().getTime());
-        Object subscriptionType = request.getParams().get(0);
-        String name = subscriptionType + "Service";
-        if (applicationContext.containsBean(name)) {
-            try {
-                applicationContext.getBean(name, SubscriptionService.class)
-                        .subscribe(webSocketChannelData);
+                WebSocketData webSocketData = JSON.parseObject(operations.get(pushDataKey, key), WebSocketData.class);
+                if (webSocketData == null) {
+                    continue;
+                }
+                Request request = webSocketData.getRequest();
+                Object subscriptionType = request.getParams().get(0);
+                String name = subscriptionType + "Service";
+                if (applicationContext.containsBean(name)) {
+                    SubscriptionService service = applicationContext.getBean(name, SubscriptionService.class);
+                    service.subscribe(webSocketData);
+                    operations.put(pushDataKey, key, JsonUtil.toJson(webSocketData));
+                }
             } catch (Exception e) {
                 log.error("推送订阅信息失败", e);
             }

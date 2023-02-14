@@ -1,18 +1,13 @@
 package com.platon.browser.service;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.platon.browser.config.RedisKeyConfig;
 import com.platon.browser.elasticsearch.dto.TransactionOrigin;
 import com.platon.browser.service.elasticsearch.EsTransactionOriginRepository;
 import com.platon.browser.service.elasticsearch.bean.ESResult;
 import com.platon.browser.service.elasticsearch.query.ESQueryBuilderConstructor;
-import com.platon.browser.service.elasticsearch.query.ESQueryBuilders;
-import com.platon.browser.websocket.WebSocketChannelData;
+import com.platon.browser.websocket.WebSocketData;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.HashOperations;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -20,21 +15,24 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.platon.browser.service.ESQueryBuilderConstructorBuilder.buildBlockConstructor;
+
 @Service
+@Scope("prototype")
 @Slf4j
 public class MinedTransactionsService implements SubscriptionService {
 
     @Resource
     private EsTransactionOriginRepository esTransactionOriginRepository;
     @Resource
-    private RedisKeyConfig redisKeyConfig;
-    @Autowired
-    private RedisTemplate<String, String> redisTemplate;
-    @Resource
     private WebSocketService webSocketService;
+    List<TransactionOrigin> rsData = null;
 
     @Override
-    public void subscribe(WebSocketChannelData webSocketData) {
+    public void subscribe(WebSocketData webSocketData) {
+        if (rsData == null) {
+            rsData = queryData(webSocketData);
+        }
         List<Object> requestParam = webSocketData.getRequest().getParams();
         List<MinedTransactionsAddress> addresses = new ArrayList<>();
         Boolean hashesOnly = false;
@@ -44,42 +42,41 @@ public class MinedTransactionsService implements SubscriptionService {
             hashesOnly = minedTransactionsParam.getHashesOnly();
             addresses = minedTransactionsParam.getAddresses();
         }
-        ESQueryBuilderConstructor blockConstructor = new ESQueryBuilderConstructor();
-        int pageSize;
-        String blockNumberFieldName = "blockNumber";
-        if (webSocketData.getBlockNum() == null) {
-            pageSize = 1;
-            blockConstructor.setDesc(blockNumberFieldName);
-        } else {
-            blockConstructor.must(new ESQueryBuilders().range(blockNumberFieldName, webSocketData.getBlockNum() + 1, null)).setAsc(blockNumberFieldName);
-            pageSize = 10;
-        }
-        try {
-            ESResult<TransactionOrigin> transactionList = esTransactionOriginRepository.search(blockConstructor, TransactionOrigin.class, 1, pageSize);
-            for (TransactionOrigin transaction : transactionList.getRsData()) {
-                if (!addresses.isEmpty() && addresses.stream().noneMatch(address ->
-                        (address.getFrom() == null || address.getFrom().equals(transaction.getFrom()))
-                        && (address.getTo() == null || address.getTo().equals(transaction.getTo())))) {
-                    continue;
-                }
-                if (hashesOnly) {
-                    MinedTransactionResult<MinedTransactionOnlyHash> minedTransactionResult = new MinedTransactionResult<>();
-                    MinedTransactionOnlyHash minedTransactionOnlyHash = new MinedTransactionOnlyHash();
-                    minedTransactionOnlyHash.setHash(transaction.getHash());
-                    minedTransactionResult.setTransaction(minedTransactionOnlyHash);
-                    webSocketService.send(webSocketData, transaction.getHash());
-                } else {
-                    MinedTransactionResult<TransactionResult> minedTransactionResult = new MinedTransactionResult<>();
-                    minedTransactionResult.setTransaction(new TransactionResult(transaction));
-                    webSocketService.send(webSocketData, minedTransactionResult);
-                }
-                webSocketData.setBlockNum(transaction.getBlockNumber().longValue());
-                HashOperations<String, Object, Object> hashOperations = redisTemplate.opsForHash();
-                hashOperations.put(redisKeyConfig.getPushData(), webSocketData.getRequestHash(), JSON.toJSONString(webSocketData));
+        Long blockNumber = ESQueryBuilderConstructorBuilder.getBlockNumber(webSocketData);
+        for (TransactionOrigin transaction : rsData) {
+            long number = transaction.getBlockNumber().longValue();
+            if (blockNumber != null && number <= blockNumber) {
+                continue;
             }
+            if (!addresses.isEmpty() && addresses.stream().noneMatch(address ->
+                    (address.getFrom() == null || address.getFrom().equals(transaction.getFrom()))
+                    && (address.getTo() == null || address.getTo().equals(transaction.getTo())))) {
+                continue;
+            }
+            if (hashesOnly) {
+                MinedTransactionResult<MinedTransactionOnlyHash> minedTransactionResult = new MinedTransactionResult<>();
+                MinedTransactionOnlyHash minedTransactionOnlyHash = new MinedTransactionOnlyHash();
+                minedTransactionOnlyHash.setHash(transaction.getHash());
+                minedTransactionResult.setTransaction(minedTransactionOnlyHash);
+                webSocketService.send(webSocketData, transaction.getHash());
+            } else {
+                MinedTransactionResult<TransactionResult> minedTransactionResult = new MinedTransactionResult<>();
+                minedTransactionResult.setTransaction(new TransactionResult(transaction));
+                webSocketService.send(webSocketData, minedTransactionResult);
+            }
+            webSocketData.setLastPushData("" + number);
+        }
+    }
+
+    public List<TransactionOrigin> queryData(WebSocketData webSocketData) {
+        ESQueryBuilderConstructor blockConstructor = buildBlockConstructor(webSocketData, "blockNumber");
+        try {
+            ESResult<TransactionOrigin> transactionList = esTransactionOriginRepository.search(blockConstructor, TransactionOrigin.class, 1, blockConstructor.getSize());
+            return transactionList.getRsData();
         } catch (IOException e) {
             log.error("查询es异常", e);
         }
+        return new ArrayList<>();
     }
 
 }

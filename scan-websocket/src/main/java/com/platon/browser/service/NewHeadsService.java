@@ -1,58 +1,58 @@
 package com.platon.browser.service;
 
-import com.alibaba.fastjson.JSON;
-import com.platon.browser.config.RedisKeyConfig;
 import com.platon.browser.elasticsearch.dto.BlockOrigin;
 import com.platon.browser.service.elasticsearch.EsBlockOriginRepository;
 import com.platon.browser.service.elasticsearch.bean.ESResult;
 import com.platon.browser.service.elasticsearch.query.ESQueryBuilderConstructor;
-import com.platon.browser.service.elasticsearch.query.ESQueryBuilders;
-import com.platon.browser.websocket.WebSocketChannelData;
+import com.platon.browser.websocket.WebSocketData;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.HashOperations;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.platon.browser.service.ESQueryBuilderConstructorBuilder.buildBlockConstructor;
 
 @Service
+@Scope("prototype")
 @Slf4j
 public class NewHeadsService implements SubscriptionService {
 
     @Resource
     private EsBlockOriginRepository esBlockOriginRepository;
     @Resource
-    private RedisKeyConfig redisKeyConfig;
-    @Autowired
-    private RedisTemplate<String, String> redisTemplate;
-    @Resource
     private WebSocketService webSocketService;
 
+    private List<BlockOrigin> rsData = null;
+
     @Override
-    public void subscribe(WebSocketChannelData webSocketData) {
-        ESQueryBuilderConstructor blockConstructor = new ESQueryBuilderConstructor();
-        int pageSize;
-        String numberFieldName = "number";
-        if (webSocketData.getBlockNum() == null) {
-            pageSize = 1;
-            blockConstructor.setDesc(numberFieldName);
-        } else {
-            blockConstructor.must(new ESQueryBuilders().range(numberFieldName, webSocketData.getBlockNum() + 1, null)).setAsc(numberFieldName);
-            pageSize = 10;
+    public void subscribe(WebSocketData webSocketData) {
+        if (rsData == null) {
+            rsData = queryData(webSocketData);
         }
-        try {
-            ESResult<BlockOrigin> blockList = esBlockOriginRepository.search(blockConstructor, BlockOrigin.class, 1, pageSize);
-            for (BlockOrigin block : blockList.getRsData()) {
-                webSocketService.send(webSocketData, new BlockResult(block));
-                webSocketData.setBlockNum(block.getNumber().longValue());
-                HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
-                hashOperations.put(redisKeyConfig.getPushData(), webSocketData.getRequestHash(), JSON.toJSONString(webSocketData));
+        Long blockNumber = ESQueryBuilderConstructorBuilder.getBlockNumber(webSocketData);
+        for (BlockOrigin blockOrigin : rsData) {
+            long number = blockOrigin.getNumber().longValue();
+            if (blockNumber != null && number <= blockNumber) {
+                continue;
             }
+            webSocketService.send(webSocketData, new BlockResult(blockOrigin));
+            webSocketData.setLastPushData("" + number);
+        }
+    }
+
+    public List<BlockOrigin> queryData(WebSocketData webSocketData) {
+        ESQueryBuilderConstructor blockConstructor = buildBlockConstructor(webSocketData, "number");
+        try {
+            ESResult<BlockOrigin> blockList = esBlockOriginRepository.search(blockConstructor, BlockOrigin.class, 1, blockConstructor.getSize());
+            return blockList.getRsData();
         } catch (IOException e) {
             log.error("查询es异常", e);
         }
+        return new ArrayList<>();
     }
 
 }

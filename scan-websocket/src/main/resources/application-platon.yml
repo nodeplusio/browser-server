@@ -65,7 +65,8 @@ spring:
       #erc1155交易
       erc1155Tx: ${platon.redis-namespace}:erc1155Tx
       proxyRequestChannel: proxy:${profile}:requestChannel
-      pushData:  ${platon.redis-namespace}:pushData
+      pushData: ${platon.redis-namespace}:pushData
+
   #ES索引配置
   elasticsearch:
     high-level-client:

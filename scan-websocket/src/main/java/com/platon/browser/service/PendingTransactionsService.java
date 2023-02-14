@@ -1,24 +1,23 @@
 package com.platon.browser.service;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.platon.bech32.Bech32;
-import com.platon.browser.config.RedisKeyConfig;
 import com.platon.browser.service.tx.PendingTxQueryService;
-import com.platon.browser.websocket.WebSocketChannelData;
+import com.platon.browser.util.JsonUtil;
+import com.platon.browser.websocket.WebSocketData;
 import com.platon.parameters.NetworkParameters;
 import com.platon.protocol.core.methods.response.Transaction;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.HashOperations;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@Scope("prototype")
 @Slf4j
 public class PendingTransactionsService implements SubscriptionService {
 
@@ -26,14 +25,22 @@ public class PendingTransactionsService implements SubscriptionService {
     private PendingTxQueryService pendingTxQueryService;
 
     @Resource
-    private RedisKeyConfig redisKeyConfig;
-    @Autowired
-    private RedisTemplate<String, String> redisTemplate;
-    @Resource
     private WebSocketService webSocketService;
+    private List<Transaction> transactions;
+
+    @PostConstruct
+    void init() {
+        transactions = pendingTxQueryService.queryPendingTxList();
+        for (Transaction transaction : transactions) {
+            String from = Bech32.addressDecodeHex(transaction.getFrom());
+            String to = Bech32.addressDecodeHex(transaction.getTo());
+            transaction.setFrom(from);
+            transaction.setTo(to);
+        }
+    }
 
     @Override
-    public void subscribe(WebSocketChannelData webSocketData) {
+    public void subscribe(WebSocketData webSocketData) {
         List<Object> requestParam = webSocketData.getRequest().getParams();
         List<String> fromAddressList = new ArrayList<>();
         List<String> toAddressList = new ArrayList<>();
@@ -54,15 +61,15 @@ public class PendingTransactionsService implements SubscriptionService {
                 toAddressList.addAll((List<String>) toAddress);
             }
         }
-        List<Transaction> transactions = pendingTxQueryService.queryPendingTxList();
         List<String> hashes = new ArrayList<>();
         NetworkParameters.selectPlatON();
+        String lastPushData = webSocketData.getLastPushData();
         for (Transaction transaction : transactions) {
             String hash = transaction.getHash();
             hashes.add(hash);
-            if (webSocketData.getHashes().contains(hash)
-                    || !fromAddressList.isEmpty() && !fromAddressList.contains(Bech32.addressDecodeHex(transaction.getFrom()))
-                    || !toAddressList.isEmpty() && !toAddressList.contains(Bech32.addressDecodeHex(transaction.getTo()))) {
+            if (lastPushData != null && lastPushData.contains(hash)
+                    || !fromAddressList.isEmpty() && !fromAddressList.contains(transaction.getFrom())
+                    || !toAddressList.isEmpty() && !toAddressList.contains(transaction.getTo())) {
                 continue;
             }
 
@@ -72,9 +79,7 @@ public class PendingTransactionsService implements SubscriptionService {
                 webSocketService.send(webSocketData, new TransactionResult(transaction));
             }
         }
-        webSocketData.setHashes(hashes);
-        HashOperations<String, Object, Object> hashOperations = redisTemplate.opsForHash();
-        hashOperations.put(redisKeyConfig.getPushData(), webSocketData.getRequestHash(), JSON.toJSONString(webSocketData));
+        webSocketData.setLastPushData(JsonUtil.toJson(hashes));
     }
 
 }

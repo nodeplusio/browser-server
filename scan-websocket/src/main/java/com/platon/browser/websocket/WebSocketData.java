@@ -2,22 +2,18 @@ package com.platon.browser.websocket;
 
 import lombok.Data;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 @Data
 public class WebSocketData {
 
-    private String type;
+    private String requestHash;
 
-    private Map<String, Request> requests = new HashMap<>();
+    private String responseChannel;
 
-    private WebSocketChannelData webSocketChannelData;
+    private Request request;
 
-    private Long blockNum;
+    private SubscriptionResponse<Object> response;
 
-    private List<String> hashes = new ArrayList<>();
+    private String lastPushData;
 
+    private long dataTime;
 }
