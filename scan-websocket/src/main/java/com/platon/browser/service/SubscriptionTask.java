@@ -25,6 +25,7 @@ import javax.annotation.Resource;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -148,6 +149,7 @@ public class SubscriptionTask {
     public void send() {
         long dataTime = System.currentTimeMillis();
         HashOperations<String, String, String> operations = redisTemplate.opsForHash();
+        Map<String, SubscriptionService> serviceMap = new HashMap<>();
         for (String key : operations.keys(pushDataKey)) {
             try {
                 WebSocketData webSocketData = JSON.parseObject(operations.get(pushDataKey, key), WebSocketData.class);
@@ -158,7 +160,13 @@ public class SubscriptionTask {
                 Object subscriptionType = request.getParams().get(0);
                 String name = subscriptionType + "Service";
                 if (applicationContext.containsBean(name)) {
-                    SubscriptionService service = applicationContext.getBean(name, SubscriptionService.class);
+                    SubscriptionService service;
+                    if (serviceMap.containsKey(name)) {
+                        service = serviceMap.get(name);
+                    } else {
+                        service = applicationContext.getBean(name, SubscriptionService.class);
+                        serviceMap.put(name, service);
+                    }
                     long s = System.currentTimeMillis();
                     service.subscribe(webSocketData);
                     log.debug("推送单个Subscription耗时:{} ms", System.currentTimeMillis() - s);
