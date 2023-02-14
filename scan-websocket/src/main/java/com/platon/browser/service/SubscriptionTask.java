@@ -83,7 +83,7 @@ public class SubscriptionTask {
                     hashOperations.delete(pushDataKey, webSocketData.getRequestHash());
                 } else {
                     webSocketData.setDataTime(System.currentTimeMillis());
-                    hashOperations.put(pushDataKey, webSocketData.getRequestHash(), s);
+                    hashOperations.put(pushDataKey, webSocketData.getRequestHash(), JsonUtil.toJson(webSocketData));
                 }
             }
         });
