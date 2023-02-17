@@ -64,6 +64,7 @@ public class WebSocketService {
 
     public void send(WebSocketData webSocketData, Object result) {
         sendExecutorService.submit(() -> {
+            long s = System.currentTimeMillis();
             Request request = webSocketData.getRequest();
 
             SubscriptionResponse<Object> response = new SubscriptionResponse<>();
@@ -79,6 +80,7 @@ public class WebSocketService {
             redisTemplate.convertAndSend(webSocketData.getResponseChannel(), message);
             HashOperations<String, Object, Object> operations = redisTemplate.opsForHash();
             operations.put(pushDataKey, webSocketData.getRequestHash(), JsonUtil.toJson(webSocketData));
+            log.debug("webSocketService.send 耗时:{} ms", System.currentTimeMillis() - s);
         });
     }
 }

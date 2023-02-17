@@ -41,9 +41,7 @@ public class NewHeadsService implements SubscriptionService {
             if (blockNumber != null && number <= blockNumber) {
                 continue;
             }
-            s = System.currentTimeMillis();
             webSocketService.send(webSocketData, new BlockResult(blockOrigin));
-            log.debug("webSocketService.send 耗时:{} ms", System.currentTimeMillis() - s);
             webSocketData.setLastPushData("" + number);
         }
     }

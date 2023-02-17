@@ -52,14 +52,14 @@ public class SubscriptionTask {
      */
     @PostConstruct
     void subscribe() {
-        subscribeExecutorService.submit(() -> {
-            ListOperations<String, String> listOperations = redisTemplate.opsForList();
-            while (true) {
-                log.debug("订阅Subscription");
-                String s = listOperations.rightPop(redisKeyConfig.getProxyRequestChannel(), Duration.ofSeconds(1));
-                if (s == null) {
-                    continue;
-                }
+        ListOperations<String, String> listOperations = redisTemplate.opsForList();
+        while (true) {
+            log.debug("订阅Subscription");
+            String s = listOperations.rightPop(redisKeyConfig.getProxyRequestChannel(), Duration.ofSeconds(1));
+            if (s == null) {
+                continue;
+            }
+            subscribeExecutorService.submit(() -> {
                 WebSocketData webSocketData = JSON.parseObject(s, WebSocketData.class);
                 Request request = webSocketData.getRequest();
                 HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
@@ -69,8 +69,8 @@ public class SubscriptionTask {
                     webSocketData.setDataTime(System.currentTimeMillis());
                     hashOperations.put(webSocketService.getPushDataKey(), webSocketData.getRequestHash(), JsonUtil.toJson(webSocketData));
                 }
-            }
-        });
+            });
+        }
     }
 
     /**
