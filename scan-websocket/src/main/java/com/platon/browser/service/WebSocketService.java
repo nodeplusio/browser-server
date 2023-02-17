@@ -29,6 +29,8 @@ public class WebSocketService {
     private RedisTemplate<String, String> redisTemplate;
     @Value("${ws.sendExecutorSize:20}")
     private int sendExecutorThreadSize;
+    @Value("${ws.subscribeExecutorSize:20}")
+    private int subscribeExecutorThreadSize;
     @Autowired
     private ExecutorService sendExecutorService;
     @Resource
@@ -53,6 +55,11 @@ public class WebSocketService {
     @Bean
     ExecutorService sendExecutorService() {
         return Executors.newFixedThreadPool(sendExecutorThreadSize);
+    }
+
+    @Bean
+    ExecutorService subscribeExecutorService() {
+        return Executors.newFixedThreadPool(subscribeExecutorThreadSize);
     }
 
     public void send(WebSocketData webSocketData, Object result) {

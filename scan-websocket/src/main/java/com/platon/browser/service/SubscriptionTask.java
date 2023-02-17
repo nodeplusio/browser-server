@@ -26,7 +26,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 @Component
 @Slf4j
@@ -43,16 +42,17 @@ public class SubscriptionTask {
     private RedissonClient redissonClient;
     @Resource
     private WebSocketService webSocketService;
-    private static final ExecutorService SUBSCRIBE_EXECUTOR = Executors.newSingleThreadExecutor();
     @Value("${ws-send.delay-ms:30000}")
     private long delayMs;
+    @Resource
+    private ExecutorService subscribeExecutorService;
 
     /**
      * 订阅Subscription
      */
     @PostConstruct
     void subscribe() {
-        SUBSCRIBE_EXECUTOR.submit(() -> {
+        subscribeExecutorService.submit(() -> {
             ListOperations<String, String> listOperations = redisTemplate.opsForList();
             while (true) {
                 log.debug("订阅Subscription");
@@ -79,7 +79,7 @@ public class SubscriptionTask {
     @Bean
     ApplicationListener<ContextClosedEvent> contextClosedEventApplicationListener() {
         return event -> {
-            SUBSCRIBE_EXECUTOR.shutdownNow();
+            subscribeExecutorService.shutdownNow();
             ListOperations<String, String> listOperations = redisTemplate.opsForList();
             HashOperations<String, String, String> operations = redisTemplate.opsForHash();
             Map<String, String> entries = operations.entries(webSocketService.getPushDataKey());
@@ -134,6 +134,7 @@ public class SubscriptionTask {
         HashOperations<String, String, String> operations = redisTemplate.opsForHash();
         Map<String, SubscriptionService> serviceMap = new HashMap<>();
         Map<String, String> entries = operations.entries(webSocketService.getPushDataKey());
+        log.debug("request count: {}", entries.size());
         for (Map.Entry<String, String> entry : entries.entrySet()) {
             try {
                 long s = System.currentTimeMillis();
