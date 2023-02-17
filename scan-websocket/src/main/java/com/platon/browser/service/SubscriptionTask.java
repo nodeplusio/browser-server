@@ -44,7 +44,7 @@ public class SubscriptionTask {
     private RedisKeyConfig redisKeyConfig;
     @Resource
     private RedissonClient redissonClient;
-    private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor();
+    private static final ExecutorService SUBSCRIBE_EXECUTOR = Executors.newSingleThreadExecutor();
     @Value("${server.port}")
     private Integer port;
     @Value("${ws-send.delay-ms:30000}")
@@ -69,7 +69,7 @@ public class SubscriptionTask {
      */
     @PostConstruct
     void subscribe() {
-        EXECUTOR.submit(() -> {
+        SUBSCRIBE_EXECUTOR.submit(() -> {
             ListOperations<String, String> listOperations = redisTemplate.opsForList();
             while (true) {
                 log.debug("订阅Subscription");
@@ -96,7 +96,7 @@ public class SubscriptionTask {
     @Bean
     ApplicationListener<ContextClosedEvent> contextClosedEventApplicationListener() {
         return event -> {
-            EXECUTOR.shutdownNow();
+            SUBSCRIBE_EXECUTOR.shutdownNow();
             ListOperations<String, String> listOperations = redisTemplate.opsForList();
             HashOperations<String, String, String> operations = redisTemplate.opsForHash();
             Map<String, String> entries = operations.entries(pushDataKey);
