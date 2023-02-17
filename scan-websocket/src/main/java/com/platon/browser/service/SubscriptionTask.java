@@ -45,10 +45,10 @@ public class SubscriptionTask {
     @Resource
     private RedissonClient redissonClient;
     private static final ExecutorService SUBSCRIBE_EXECUTOR = Executors.newSingleThreadExecutor();
-    @Value("${server.port}")
-    private Integer port;
     @Value("${ws-send.delay-ms:30000}")
     private long delayMs;
+    @Value("${server.port}")
+    private Integer port;
 
     private String pushDataKey;
 
@@ -150,9 +150,11 @@ public class SubscriptionTask {
         long dataTime = System.currentTimeMillis();
         HashOperations<String, String, String> operations = redisTemplate.opsForHash();
         Map<String, SubscriptionService> serviceMap = new HashMap<>();
-        for (String key : operations.keys(pushDataKey)) {
+        Map<String, String> entries = operations.entries(pushDataKey);
+        for (Map.Entry<String, String> entry : entries.entrySet()) {
             try {
-                WebSocketData webSocketData = JSON.parseObject(operations.get(pushDataKey, key), WebSocketData.class);
+                long s = System.currentTimeMillis();
+                WebSocketData webSocketData = JSON.parseObject(entry.getValue(), WebSocketData.class);
                 if (webSocketData == null) {
                     continue;
                 }
@@ -167,11 +169,10 @@ public class SubscriptionTask {
                         service = applicationContext.getBean(name, SubscriptionService.class);
                         serviceMap.put(name, service);
                     }
-                    long s = System.currentTimeMillis();
+                    webSocketData.setDataTime(dataTime);
                     service.subscribe(webSocketData);
                     log.debug("推送单个Subscription耗时:{} ms", System.currentTimeMillis() - s);
-                    webSocketData.setDataTime(dataTime);
-                    operations.put(pushDataKey, key, JsonUtil.toJson(webSocketData));
+                    operations.put(pushDataKey, entry.getKey(), JsonUtil.toJson(webSocketData));
                 }
             } catch (Exception e) {
                 log.error("推送订阅信息失败", e);
