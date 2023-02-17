@@ -6,6 +6,7 @@ import com.platon.browser.websocket.Params;
 import com.platon.browser.websocket.Request;
 import com.platon.browser.websocket.SubscriptionResponse;
 import com.platon.browser.websocket.WebSocketData;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,7 +35,7 @@ public class WebSocketService {
     private RedisKeyConfig redisKeyConfig;
     @Value("${server.port}")
     private Integer port;
-
+    @Getter
     private String pushDataKey;
 
     @PostConstruct
