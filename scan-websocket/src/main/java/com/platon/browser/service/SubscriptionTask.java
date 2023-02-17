@@ -58,13 +58,13 @@ public class SubscriptionTask {
             subscribeExecutorService.submit(() -> {
                 ListOperations<String, String> listOperations = redisTemplate.opsForList();
                 while (true) {
-                    log.debug("订阅Subscription");
                     String s = listOperations.rightPop(redisKeyConfig.getProxyRequestChannel(), Duration.ofSeconds(1));
                     if (s == null) {
                         continue;
                     }
                     WebSocketData webSocketData = JSON.parseObject(s, WebSocketData.class);
                     Request request = webSocketData.getRequest();
+                    log.debug("订阅Subscription,method:{},hash:{}", request.getMethod(), webSocketData.getRequestHash());
                     HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
                     if (ETH_UNSUBSCRIBE.equals(request.getMethod())) {
                         hashOperations.delete(webSocketService.getPushDataKey(), webSocketData.getRequestHash());
