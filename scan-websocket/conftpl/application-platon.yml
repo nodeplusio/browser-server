@@ -184,6 +184,7 @@ platon:
 recaptchaUrl: https://recaptcha.net/recaptcha/api/siteverify?secret=6Lf8KLcUAAAAAPyHZfa7oeWjdMSyvgDHUUeYf01Z&response=%s
 limit:
   num: 10
+ws.sendExecutorSize: 20
 output:
   file:
     url: /var/tmp

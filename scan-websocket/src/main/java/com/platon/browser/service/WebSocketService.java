@@ -20,10 +20,10 @@ import java.util.concurrent.Executors;
 public class WebSocketService {
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
-    @Autowired
-    private ExecutorService sendExecutorService;
     @Value("${ws.sendExecutorSize:20}")
     private int sendExecutorThreadSize;
+    @Autowired
+    private ExecutorService sendExecutorService;
 
     @Bean
     ExecutorService sendExecutorService() {
