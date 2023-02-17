@@ -44,6 +44,8 @@ public class SubscriptionTask {
     private WebSocketService webSocketService;
     @Value("${ws-send.delay-ms:30000}")
     private long delayMs;
+    @Value("${ws.subscribeExecutorSize:20}")
+    private int subscribeExecutorThreadSize;
     @Resource
     private ExecutorService subscribeExecutorService;
 
@@ -52,22 +54,24 @@ public class SubscriptionTask {
      */
     @PostConstruct
     void subscribe() {
-        ListOperations<String, String> listOperations = redisTemplate.opsForList();
-        while (true) {
-            log.debug("订阅Subscription");
-            String s = listOperations.rightPop(redisKeyConfig.getProxyRequestChannel(), Duration.ofSeconds(1));
-            if (s == null) {
-                continue;
-            }
+        for (int i = 0; i < subscribeExecutorThreadSize; i++) {
             subscribeExecutorService.submit(() -> {
-                WebSocketData webSocketData = JSON.parseObject(s, WebSocketData.class);
-                Request request = webSocketData.getRequest();
-                HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
-                if (ETH_UNSUBSCRIBE.equals(request.getMethod())) {
-                    hashOperations.delete(webSocketService.getPushDataKey(), webSocketData.getRequestHash());
-                } else {
-                    webSocketData.setDataTime(System.currentTimeMillis());
-                    hashOperations.put(webSocketService.getPushDataKey(), webSocketData.getRequestHash(), JsonUtil.toJson(webSocketData));
+                ListOperations<String, String> listOperations = redisTemplate.opsForList();
+                while (true) {
+                    log.debug("订阅Subscription");
+                    String s = listOperations.rightPop(redisKeyConfig.getProxyRequestChannel(), Duration.ofSeconds(1));
+                    if (s == null) {
+                        continue;
+                    }
+                    WebSocketData webSocketData = JSON.parseObject(s, WebSocketData.class);
+                    Request request = webSocketData.getRequest();
+                    HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
+                    if (ETH_UNSUBSCRIBE.equals(request.getMethod())) {
+                        hashOperations.delete(webSocketService.getPushDataKey(), webSocketData.getRequestHash());
+                    } else {
+                        webSocketData.setDataTime(System.currentTimeMillis());
+                        hashOperations.put(webSocketService.getPushDataKey(), webSocketData.getRequestHash(), JsonUtil.toJson(webSocketData));
+                    }
                 }
             });
         }
