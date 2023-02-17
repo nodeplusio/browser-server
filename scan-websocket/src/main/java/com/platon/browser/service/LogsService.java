@@ -63,10 +63,10 @@ public class LogsService implements SubscriptionService {
             if (blockNumber != null && number <= blockNumber) {
                 continue;
             }
+            webSocketData.setLastPushData("" + number);
             if (matchTopic(topicList, logOrigin.getTopics())) {
                 webSocketService.send(webSocketData, new LogResult(logOrigin));
             }
-            webSocketData.setLastPushData("" + number);
         }
     }
 

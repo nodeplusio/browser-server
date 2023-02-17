@@ -78,9 +78,15 @@ public class WebSocketService {
             webSocketData.setResponse(response);
             String message = JsonUtil.toJson(webSocketData);
             redisTemplate.convertAndSend(webSocketData.getResponseChannel(), message);
+            log.debug("webSocketService.send 耗时:{} ms", System.currentTimeMillis() - s);
+        });
+    }
+    public void update(WebSocketData webSocketData) {
+        sendExecutorService.submit(() -> {
+            long s = System.currentTimeMillis();
             HashOperations<String, Object, Object> operations = redisTemplate.opsForHash();
             operations.put(pushDataKey, webSocketData.getRequestHash(), JsonUtil.toJson(webSocketData));
-            log.debug("webSocketService.send 耗时:{} ms", System.currentTimeMillis() - s);
+            log.debug("webSocketService.update 耗时:{} ms", System.currentTimeMillis() - s);
         });
     }
 }

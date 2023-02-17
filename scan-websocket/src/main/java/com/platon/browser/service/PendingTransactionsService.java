@@ -73,13 +73,13 @@ public class PendingTransactionsService implements SubscriptionService {
                 continue;
             }
 
+            webSocketData.setLastPushData(JsonUtil.toJson(hashes));
             if (hashesOnly) {
                 webSocketService.send(webSocketData, hash);
             } else {
                 webSocketService.send(webSocketData, new TransactionResult(transaction));
             }
         }
-        webSocketData.setLastPushData(JsonUtil.toJson(hashes));
     }
 
 }

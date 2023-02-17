@@ -48,6 +48,7 @@ public class MinedTransactionsService implements SubscriptionService {
             if (blockNumber != null && number <= blockNumber) {
                 continue;
             }
+            webSocketData.setLastPushData("" + number);
             if (!addresses.isEmpty() && addresses.stream().noneMatch(address ->
                     (address.getFrom() == null || address.getFrom().equals(transaction.getFrom()))
                     && (address.getTo() == null || address.getTo().equals(transaction.getTo())))) {
@@ -64,7 +65,6 @@ public class MinedTransactionsService implements SubscriptionService {
                 minedTransactionResult.setTransaction(new TransactionResult(transaction));
                 webSocketService.send(webSocketData, minedTransactionResult);
             }
-            webSocketData.setLastPushData("" + number);
         }
     }
 

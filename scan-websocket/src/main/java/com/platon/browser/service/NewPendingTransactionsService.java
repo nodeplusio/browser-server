@@ -39,9 +39,9 @@ public class NewPendingTransactionsService implements SubscriptionService {
             if (lastPushData != null && lastPushData.contains(hash)) {
                 continue;
             }
+            webSocketData.setLastPushData(JsonUtil.toJson(hashes));
             webSocketService.send(webSocketData, hash);
         }
-        webSocketData.setLastPushData(JsonUtil.toJson(hashes));
     }
 
 }
