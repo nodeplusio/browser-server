@@ -31,6 +31,8 @@ public class WebSocketService {
     private int sendExecutorThreadSize;
     @Value("${ws.subscribeExecutorSize:20}")
     private int subscribeExecutorThreadSize;
+    @Value("${ws.batchExecutorThreadSize:20}")
+    private int batchExecutorThreadSize;
     @Autowired
     private ExecutorService sendExecutorService;
     @Resource
@@ -60,6 +62,11 @@ public class WebSocketService {
     @Bean
     ExecutorService subscribeExecutorService() {
         return Executors.newFixedThreadPool(subscribeExecutorThreadSize);
+    }
+
+    @Bean
+    ExecutorService batchExecutorService() {
+        return Executors.newFixedThreadPool(batchExecutorThreadSize);
     }
 
     public void send(WebSocketData webSocketData, Object result) {

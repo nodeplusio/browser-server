@@ -48,6 +48,8 @@ public class SubscriptionTask {
     private int batchSendSize;
     @Resource
     private ExecutorService subscribeExecutorService;
+    @Resource
+    private ExecutorService batchExecutorService;
 
     /**
      * 订阅Subscription
@@ -149,7 +151,7 @@ public class SubscriptionTask {
         }
         log.debug("request count: {}, 查询耗时: {} ms", entries.size(), System.currentTimeMillis() - dataTime);
         for (List<String> strings : list) {
-            subscribeExecutorService.submit(() -> {
+            batchExecutorService.submit(() -> {
                 long batchStart = System.currentTimeMillis();
                 for (String value : strings) {
                     try {
