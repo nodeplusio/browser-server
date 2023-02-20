@@ -159,7 +159,6 @@ public class SubscriptionTask {
                     }
                     webSocketData.setDataTime(dataTime);
                     service.subscribe(webSocketData);
-                    webSocketService.update(webSocketData);
                     log.debug("推送单个Subscription耗时:{} ms", System.currentTimeMillis() - s);
                 }
             } catch (Exception e) {
