@@ -6,4 +6,7 @@ public interface SubscriptionService {
 
     void subscribe(WebSocketData webSocketData);
 
+    default void send() {
+
+    }
 }

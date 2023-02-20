@@ -140,47 +140,35 @@ public class SubscriptionTask {
         HashOperations<String, String, String> operations = redisTemplate.opsForHash();
         Map<String, SubscriptionService> serviceMap = new HashMap<>();
         Map<String, String> entries = operations.entries(webSocketService.getPushDataKey());
-        List<List<String>> list = new ArrayList<>();
-        int i = 0;
-        for (String value : entries.values()) {
-            if (i % batchSendSize == 0) {
-                list.add(new ArrayList<>());
-            }
-            list.get(list.size() - 1).add(value);
-            i ++;
-        }
         log.debug("request count: {}, 查询耗时: {} ms", entries.size(), System.currentTimeMillis() - dataTime);
-        for (List<String> strings : list) {
-            batchExecutorService.submit(() -> {
-                long batchStart = System.currentTimeMillis();
-                for (String value : strings) {
-                    try {
-                        long s = System.currentTimeMillis();
-                        WebSocketData webSocketData = JSON.parseObject(value, WebSocketData.class);
-                        if (webSocketData == null) {
-                            continue;
-                        }
-                        Request request = webSocketData.getRequest();
-                        Object subscriptionType = request.getParams().get(0);
-                        String name = subscriptionType + "Service";
-                        if (applicationContext.containsBean(name)) {
-                            SubscriptionService service;
-                            if (serviceMap.containsKey(name)) {
-                                service = serviceMap.get(name);
-                            } else {
-                                service = applicationContext.getBean(name, SubscriptionService.class);
-                                serviceMap.put(name, service);
-                            }
-                            webSocketData.setDataTime(dataTime);
-                            service.subscribe(webSocketData);
-                            log.debug("推送单个Subscription耗时:{} ms", System.currentTimeMillis() - s);
-                        }
-                    } catch (Exception e) {
-                        log.error("推送订阅信息失败", e);
-                    }
+        for (String value : entries.values()) {
+            try {
+                long s = System.currentTimeMillis();
+                WebSocketData webSocketData = JSON.parseObject(value, WebSocketData.class);
+                if (webSocketData == null) {
+                    continue;
                 }
-                log.debug("批次推送Subscription耗时:{} ms", System.currentTimeMillis() - batchStart);
-            });
+                Request request = webSocketData.getRequest();
+                Object subscriptionType = request.getParams().get(0);
+                String name = subscriptionType + "Service";
+                if (applicationContext.containsBean(name)) {
+                    SubscriptionService service;
+                    if (serviceMap.containsKey(name)) {
+                        service = serviceMap.get(name);
+                    } else {
+                        service = applicationContext.getBean(name, SubscriptionService.class);
+                        serviceMap.put(name, service);
+                    }
+                    webSocketData.setDataTime(dataTime);
+                    service.subscribe(webSocketData);
+                    log.debug("推送单个Subscription耗时:{} ms", System.currentTimeMillis() - s);
+                }
+            } catch (Exception e) {
+                log.error("推送订阅信息失败", e);
+            }
+        }
+        for (Map.Entry<String, SubscriptionService> entry : serviceMap.entrySet()) {
+            entry.getValue().send();
         }
         log.debug("推送全部Subscription耗时:{} ms", System.currentTimeMillis() - dataTime);
     }

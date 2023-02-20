@@ -22,7 +22,7 @@ public class ESQueryBuilderConstructorBuilder {
         } else {
             blockConstructor.must(new ESQueryBuilders().range(numberFieldName, getBlockNumber(webSocketData) + 1, null))
                     .setAsc(numberFieldName);
-            blockConstructor.setSize(1);
+            blockConstructor.setSize(10);
         }
         return blockConstructor;
     }
