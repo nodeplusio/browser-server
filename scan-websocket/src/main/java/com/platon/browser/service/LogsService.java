@@ -46,6 +46,7 @@ public class LogsService extends AbstractSubscriptionService {
             list = hashMap.get(key);
         } else {
             list = new ArrayList<>();
+            hashMap.put(key, list);
             List<String> addressList = new ArrayList<>();
             List<List<String>> topicList = new ArrayList<>();
             if (requestParam.size() > 1) {

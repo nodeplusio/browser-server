@@ -55,6 +55,7 @@ public class PendingTransactionsService extends AbstractSubscriptionService {
             list = hashMap.get(key);
         } else {
             list = new ArrayList<>();
+            hashMap.put(key, list);
             List<String> fromAddressList = new ArrayList<>();
             List<String> toAddressList = new ArrayList<>();
             boolean hashesOnly = false;

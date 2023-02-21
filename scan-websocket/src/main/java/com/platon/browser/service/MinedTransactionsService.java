@@ -46,6 +46,7 @@ public class MinedTransactionsService extends AbstractSubscriptionService {
             list = hashMap.get(key);
         } else {
             list = new ArrayList<>();
+            hashMap.put(key, list);
             List<MinedTransactionsAddress> addresses = new ArrayList<>();
             Boolean hashesOnly = false;
             if (requestParam.size() > 1) {
