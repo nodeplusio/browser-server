@@ -9,4 +9,7 @@ public interface SubscriptionService {
     default void send() {
 
     }
+
+    default void clean() {
+    }
 }

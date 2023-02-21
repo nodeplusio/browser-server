@@ -143,7 +143,6 @@ public class SubscriptionTask {
         log.debug("request count: {}, 查询耗时: {} ms", entries.size(), System.currentTimeMillis() - dataTime);
         for (String value : entries.values()) {
             try {
-                long s = System.currentTimeMillis();
                 WebSocketData webSocketData = JSON.parseObject(value, WebSocketData.class);
                 if (webSocketData == null) {
                     continue;
@@ -159,16 +158,19 @@ public class SubscriptionTask {
                         service = applicationContext.getBean(name, SubscriptionService.class);
                         serviceMap.put(name, service);
                     }
-                    webSocketData.setDataTime(dataTime);
                     service.subscribe(webSocketData);
-                    log.debug("推送单个Subscription耗时:{} ms", System.currentTimeMillis() - s);
                 }
             } catch (Exception e) {
                 log.error("推送订阅信息失败", e);
             }
         }
-        for (Map.Entry<String, SubscriptionService> entry : serviceMap.entrySet()) {
-            entry.getValue().send();
+        String[] beanNamesForType = applicationContext.getBeanNamesForType(SubscriptionService.class);
+        for (String beanName : beanNamesForType) {
+            if (serviceMap.containsKey(beanName)) {
+                serviceMap.get(beanName).send();
+            } else {
+                applicationContext.getBean(beanName, SubscriptionService.class).clean();
+            }
         }
         log.debug("推送全部Subscription耗时:{} ms", System.currentTimeMillis() - dataTime);
     }

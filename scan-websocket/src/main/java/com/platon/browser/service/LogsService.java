@@ -6,72 +6,87 @@ import com.platon.browser.elasticsearch.dto.LogOrigin;
 import com.platon.browser.service.elasticsearch.EsLogOriginRepository;
 import com.platon.browser.service.elasticsearch.bean.ESResult;
 import com.platon.browser.service.elasticsearch.query.ESQueryBuilderConstructor;
+import com.platon.browser.util.JsonUtil;
 import com.platon.browser.websocket.WebSocketData;
+import com.platon.browser.websocket.WebSocketResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import static com.platon.browser.service.ESQueryBuilderConstructorBuilder.buildBlockConstructor;
 
 @Service
 @Scope("prototype")
 @Slf4j
-public class LogsService implements SubscriptionService {
+public class LogsService extends AbstractSubscriptionService {
 
     @Resource
     private EsLogOriginRepository esLogOriginRepository;
-    @Resource
-    private WebSocketService webSocketService;
-    private List<LogOrigin> rsData = null;
+    private Map<String, List<String>> hashMap= new HashMap<>();
+
+    private static Long blockNumber;
+    private List<LogOrigin> rsData;
 
     @Override
     public void subscribe(WebSocketData webSocketData) {
+        long s = System.currentTimeMillis();
+        if (rsData == null) {
+            responseChannel = webSocketData.getResponseChannel();
+            rsData = queryData();
+        }
+
         List<Object> requestParam = webSocketData.getRequest().getParams();
-        List<String> addressList = new ArrayList<>();
-        List<List<String>> topicList = new ArrayList<>();
-        if (requestParam.size() > 1) {
-            JSONObject param = (JSONObject) requestParam.get(1);
-            Object addresses = param.get("address");
-            if (addresses instanceof String) {
-                addressList.add((String) addresses);
-            } else if (addresses instanceof List) {
-                addressList.addAll((List<String>) addresses);
-            }
-            JSONArray topics = param.getJSONArray("topics");
-            if (topics != null) {
-                for (Object topic : topics) {
-                    if (topic == null || topic instanceof String) {
-                        topicList.add(Arrays.asList((String) topic));
-                    } else if (addresses instanceof List) {
-                        topicList.add((List<String>) topic);
+        String key = JsonUtil.toJson(requestParam);
+        List<String> list;
+        if (hashMap.containsKey(key)) {
+            list = hashMap.get(key);
+        } else {
+            list = new ArrayList<>();
+            List<String> addressList = new ArrayList<>();
+            List<List<String>> topicList = new ArrayList<>();
+            if (requestParam.size() > 1) {
+                JSONObject param = (JSONObject) requestParam.get(1);
+                Object addresses = param.get("address");
+                if (addresses instanceof String) {
+                    addressList.add((String) addresses);
+                } else if (addresses instanceof List) {
+                    addressList.addAll((List<String>) addresses);
+                }
+                JSONArray topics = param.getJSONArray("topics");
+                if (topics != null) {
+                    for (Object topic : topics) {
+                        if (topic == null || topic instanceof String) {
+                            topicList.add(Arrays.asList((String) topic));
+                        } else if (addresses instanceof List) {
+                            topicList.add((List<String>) topic);
+                        }
                     }
                 }
             }
-        }
-        if (rsData == null) {
-            rsData = queryData(webSocketData);
-        }
-        Long blockNumber = ESQueryBuilderConstructorBuilder.getBlockNumber(webSocketData);
-        for (LogOrigin logOrigin : rsData) {
-            long number = logOrigin.getBlockNumber().longValue();
-            if (blockNumber != null && number <= blockNumber) {
-                continue;
-            }
-            webSocketData.setLastPushData("" + number);
-            if (matchTopic(topicList, logOrigin.getTopics())) {
-                webSocketService.send(webSocketData, new LogResult(logOrigin));
+            for (LogOrigin logOrigin : rsData) {
+                blockNumber = logOrigin.getBlockNumber().longValue();
+                if (matchAddress(logOrigin, addressList) && matchTopic(topicList, logOrigin.getTopics())) {
+                    responses.add(WebSocketResponse.build(new LogResult(logOrigin), list, s));
+                }
             }
         }
+        list.add(webSocketData.getRequestHash());
+
     }
 
-    public List<LogOrigin> queryData(WebSocketData webSocketData) {
-        ESQueryBuilderConstructor blockConstructor = buildBlockConstructor(webSocketData, "blockNumber");
+    private boolean matchAddress(LogOrigin logOrigin, List<String> addressList) {
+        if (addressList.isEmpty()) {
+            return true;
+        }
+        return addressList.contains(logOrigin.getAddress());
+    }
+
+    public List<LogOrigin> queryData() {
+        ESQueryBuilderConstructor blockConstructor = buildBlockConstructor("blockNumber", blockNumber);
         try {
             ESResult<LogOrigin> blockList = esLogOriginRepository.search(blockConstructor, LogOrigin.class, 1, blockConstructor.getSize());
             return blockList.getRsData();
@@ -107,6 +122,11 @@ public class LogsService implements SubscriptionService {
             return second.contains(topics.get(1));
         }
         return false;
+    }
+
+    @Override
+    public void clean() {
+        blockNumber = null;
     }
 
 }

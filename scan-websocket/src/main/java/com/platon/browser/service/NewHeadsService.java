@@ -4,15 +4,10 @@ import com.platon.browser.elasticsearch.dto.BlockOrigin;
 import com.platon.browser.service.elasticsearch.EsBlockOriginRepository;
 import com.platon.browser.service.elasticsearch.bean.ESResult;
 import com.platon.browser.service.elasticsearch.query.ESQueryBuilderConstructor;
-import com.platon.browser.util.JsonUtil;
-import com.platon.browser.websocket.Params;
-import com.platon.browser.websocket.SubscriptionResponse;
 import com.platon.browser.websocket.WebSocketData;
-import lombok.Getter;
+import com.platon.browser.websocket.WebSocketResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -25,41 +20,32 @@ import static com.platon.browser.service.ESQueryBuilderConstructorBuilder.buildB
 @Service
 @Scope("prototype")
 @Slf4j
-public class NewHeadsService implements SubscriptionService {
+public class NewHeadsService extends AbstractSubscriptionService {
 
     @Resource
     private EsBlockOriginRepository esBlockOriginRepository;
-    @Autowired
-    private RedisTemplate<String, String> redisTemplate;
 
-    private List<BlockOrigin> rsData = null;
-    @Getter
-    private List<BlockResult> result = new ArrayList<>();
     private List<String> hashes = new ArrayList<>();
-    WebSocketData webSocketData = new WebSocketData();
+    private static Long blockNumber;
 
     @Override
     public void subscribe(WebSocketData webSocketData) {
         long s = System.currentTimeMillis();
         hashes.add(webSocketData.getRequestHash());
-        if (rsData == null) {
-            this.webSocketData = webSocketData;
-            rsData = queryData(webSocketData);
+        if (responses.isEmpty()) {
+            this.responseChannel = webSocketData.getResponseChannel();
+            List<BlockOrigin> rsData = queryData();
             log.debug("queryData 耗时:{} ms", System.currentTimeMillis() - s);
-            Long blockNumber = ESQueryBuilderConstructorBuilder.getBlockNumber(webSocketData);
             for (BlockOrigin blockOrigin : rsData) {
-                long number = blockOrigin.getNumber().longValue();
-                if (blockNumber != null && number <= blockNumber) {
-                    continue;
-                }
-                result.add(new BlockResult(blockOrigin));
-                webSocketData.setLastPushData("" + number);
+                blockNumber = blockOrigin.getNumber().longValue();
+
+                responses.add(WebSocketResponse.build(new BlockResult(blockOrigin), hashes, s));
             }
         }
     }
 
-    public List<BlockOrigin> queryData(WebSocketData webSocketData) {
-        ESQueryBuilderConstructor blockConstructor = buildBlockConstructor(webSocketData, "number");
+    public List<BlockOrigin> queryData() {
+        ESQueryBuilderConstructor blockConstructor = buildBlockConstructor("number", blockNumber);
         try {
             ESResult<BlockOrigin> blockList = esBlockOriginRepository.search(blockConstructor, BlockOrigin.class, 1, blockConstructor.getSize());
             return blockList.getRsData();
@@ -70,22 +56,7 @@ public class NewHeadsService implements SubscriptionService {
     }
 
     @Override
-    public void send() {
-
-        List<WebSocketData> list = new ArrayList<>();
-        for (BlockResult blockResult : result) {
-            WebSocketData webSocketData = new WebSocketData();
-            SubscriptionResponse<Object> response = new SubscriptionResponse<>();
-            Params<Object> params = new Params<>();
-            params.setSubscription(webSocketData.getRequestHash());
-            params.setResult(blockResult);
-            response.setParams(params);
-
-            webSocketData.setResponse(response);
-            webSocketData.setHashes(hashes);
-            list.add(webSocketData);
-        }
-        String message = JsonUtil.toJson(list);
-        redisTemplate.convertAndSend(webSocketData.getResponseChannel(), message);
+    public void clean() {
+        blockNumber = null;
     }
 }
