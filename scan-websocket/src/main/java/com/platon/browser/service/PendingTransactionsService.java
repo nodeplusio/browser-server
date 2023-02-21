@@ -27,7 +27,7 @@ public class PendingTransactionsService extends AbstractSubscriptionService {
     private PendingTxQueryService pendingTxQueryService;
 
     private List<Transaction> transactions;
-    private static List<String> preTransactionHashes = new ArrayList<>();
+    private static Map<String, List<String>> preTransactionHashMap = new HashMap<>();
     private Map<String, List<String>> hashMap = new HashMap<>();
 
     void init(WebSocketData webSocketData) {
@@ -78,7 +78,8 @@ public class PendingTransactionsService extends AbstractSubscriptionService {
             for (Transaction transaction : transactions) {
                 String hash = transaction.getHash();
                 newHashes.add(hash);
-                if (preTransactionHashes.contains(hash)
+                List<String> preTransactions = preTransactionHashMap.get(key);
+                if (preTransactions != null && preTransactions.contains(hash)
                         || !fromAddressList.isEmpty() && !fromAddressList.contains(transaction.getFrom())
                         || !toAddressList.isEmpty() && !toAddressList.contains(transaction.getTo())) {
                     continue;
@@ -90,7 +91,7 @@ public class PendingTransactionsService extends AbstractSubscriptionService {
                     responses.add(WebSocketResponse.build(new TransactionResult(transaction), list, s));
                 }
             }
-            preTransactionHashes = newHashes;
+            preTransactionHashMap.put(key, newHashes);
         }
         list.add(webSocketData.getRequestHash());
     }
