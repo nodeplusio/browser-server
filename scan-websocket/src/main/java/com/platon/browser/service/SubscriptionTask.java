@@ -44,12 +44,8 @@ public class SubscriptionTask {
     private long delayMs;
     @Value("${ws.subscribeExecutorSize:20}")
     private int subscribeExecutorThreadSize;
-    @Value("${ws.batchSendSize:500}")
-    private int batchSendSize;
     @Resource
     private ExecutorService subscribeExecutorService;
-    @Resource
-    private ExecutorService batchExecutorService;
 
     /**
      * 订阅Subscription
