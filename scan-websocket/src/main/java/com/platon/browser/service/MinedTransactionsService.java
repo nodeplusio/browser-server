@@ -58,11 +58,11 @@ public class MinedTransactionsService extends AbstractSubscriptionService {
             for (TransactionOrigin transaction : rsData) {
                 blockNumber = transaction.getBlockNumber().longValue();
 
-                if (!addresses.isEmpty() && addresses.stream().noneMatch(address ->
-                        (address.getFrom() == null || address.getFrom().equals(transaction.getFrom()))
-                                && (address.getTo() == null || address.getTo().equals(transaction.getTo())))) {
-                    continue;
-                }
+//                if (!addresses.isEmpty() && addresses.stream().noneMatch(address ->
+//                        (address.getFrom() == null || address.getFrom().equals(transaction.getFrom()))
+//                                && (address.getTo() == null || address.getTo().equals(transaction.getTo())))) {
+//                    continue;
+//                }
 
                 if (hashesOnly) {
                     MinedTransactionResult<MinedTransactionOnlyHash> minedTransactionResult = new MinedTransactionResult<>();
