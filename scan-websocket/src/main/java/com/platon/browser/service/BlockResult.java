@@ -2,6 +2,7 @@ package com.platon.browser.service;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.platon.browser.elasticsearch.dto.BlockOrigin;
+import com.platon.browser.util.AddressLatToHexSerializer;
 import com.platon.browser.util.BigIntegerToHexSerializer;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,6 +24,7 @@ public class BlockResult {
     private String transactionsRoot;
     private String stateRoot;
     private String receiptsRoot;
+    @JsonSerialize(using = AddressLatToHexSerializer.class)
     private String miner;
     private String mixHash;
     @JsonSerialize(using = BigIntegerToHexSerializer.class)
