@@ -6,7 +6,6 @@ import com.platon.browser.util.AddressLatToHexSerializer;
 import com.platon.browser.util.BigIntegerToHexSerializer;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.beans.BeanUtils;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -43,6 +42,7 @@ public class BlockResult {
     private List<String> uncles;
 
     public BlockResult(BlockOrigin result) {
-        BeanUtils.copyProperties(result, this);
+//        BeanUtils.copyProperties(result, this);
+        number = result.getNumber();
     }
 }
