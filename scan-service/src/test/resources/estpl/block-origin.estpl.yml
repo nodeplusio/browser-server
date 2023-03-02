@@ -1,0 +1,65 @@
+index_patterns:
+  - "*_block_origin"
+settings:
+  index:
+    max_result_window: '1000000000'
+    number_of_shards: '5'
+    number_of_replicas: '1'
+mappings:
+  properties:
+    number:
+      type: long
+    hash:
+      type: keyword
+    parentHash:
+      type: keyword
+    nonce:
+      type: keyword
+    sha3Uncles:
+      type: keyword
+    logsBloom:
+      norms: false
+      index: false
+      type: text
+      doc_values: false
+    transactionsRoot:
+      type: keyword
+    stateRoot:
+      type: keyword
+    receiptsRoot:
+      type: keyword
+    author:
+      type: keyword
+    miner:
+      type: keyword
+    mixHash:
+      type: keyword
+    difficulty:
+      type: long
+    totalDifficulty:
+      type: long
+    extraData:
+      norms: false
+      index: false
+      type: text
+      doc_values: false
+    size:
+      type: long
+    gasLimit:
+      type: long
+    gasUsed:
+      type: long
+    timestamp:
+      format: yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis
+      type: date
+    uncles:
+      norms: false
+      index: false
+      type: text
+      doc_values: false
+    sealFields:
+      norms: false
+      index: false
+      type: text
+      doc_values: false
+

@@ -1,9 +1,11 @@
 package com.platon.browser.dao.mapper;
 
+import com.github.pagehelper.Page;
 import com.platon.browser.dao.entity.Address;
 import com.platon.browser.dao.entity.AddressExample;
-import java.util.List;
 import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 public interface AddressMapper {
     long countByExample(AddressExample example);
@@ -17,6 +19,10 @@ public interface AddressMapper {
     int insertSelective(Address record);
 
     List<Address> selectByExampleWithBLOBs(AddressExample example);
+
+    Page<Address> pageByExampleWithBLOBs(AddressExample example);
+
+    Page<Address> pageByExample(AddressExample example);
 
     List<Address> selectByExample(AddressExample example);
 

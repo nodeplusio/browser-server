@@ -18,9 +18,10 @@ public class ReceiptResult extends Response<List<Receipt>> {
      * 并行解码Logs
      */
     public void resolve(Long blockNumber, ExecutorService threadPool) throws InterruptedException {
-        if(getResult().isEmpty()) return;
-        CountDownLatch latch = new CountDownLatch(getResult().size());
-        getResult().forEach(receipt->{
+        final List<Receipt> result = getResult();
+        if(result == null || result.isEmpty()) return;
+        CountDownLatch latch = new CountDownLatch(result.size());
+        result.forEach(receipt->{
             map.put(HexUtil.prefix(receipt.getTransactionHash()),receipt);
             threadPool.submit(()->{
                 try {

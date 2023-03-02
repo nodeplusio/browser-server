@@ -2,11 +2,13 @@ package com.platon.browser.controller;
 
 import com.platon.browser.enums.I18nEnum;
 import com.platon.browser.enums.RetEnum;
+import com.platon.browser.request.PageReq;
 import com.platon.browser.request.address.QueryDetailRequest;
 import com.platon.browser.request.address.QueryRPPlanDetailRequest;
+import com.platon.browser.request.address.QueryRpPlanByUnlockNumberRequest;
 import com.platon.browser.response.BaseResp;
-import com.platon.browser.response.address.QueryDetailResp;
-import com.platon.browser.response.address.QueryRPPlanDetailResp;
+import com.platon.browser.response.RespPage;
+import com.platon.browser.response.address.*;
 import com.platon.browser.service.AddressService;
 import com.platon.browser.utils.I18nUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -64,6 +66,35 @@ public class AddressController {
             QueryRPPlanDetailResp resp = addressService.rpplanDetail(req);
             sink.success(BaseResp.build(RetEnum.RET_SUCCESS.getCode(), i18n.i(I18nEnum.SUCCESS), resp));
         });
+    }
+
+    /**
+     * 1.1 地址列表按余额大小排序
+     *
+     * @param req
+     * @return reactor.core.publisher.Mono<com.platon.browser.response.BaseResp < com.platon.browser.response.address.QueryAddressValueResp>>
+     */
+    @PostMapping("address/addressvalue")
+    public Mono<RespPage<QueryAddressValueResp>> addressvalue(@Valid @RequestBody PageReq req) {
+        return Mono.just(addressService.queryAddressValue(req));
+    }
+
+    @PostMapping("address/addressValueAllCols")
+    public Mono<BaseResp<QueryAddressValueAllColsResp>> addressValueAllCols(@Valid @RequestBody PageReq req) {
+        return Mono.create(sink -> {
+            QueryAddressValueAllColsResp resp = addressService.queryAddressValueAllCols(req);
+            sink.success(BaseResp.build(RetEnum.RET_SUCCESS.getCode(), i18n.i(I18nEnum.SUCCESS), resp));
+        });
+    }
+
+    @PostMapping("address/getAllEpoch")
+    public Mono<RespPage<QueryAllEpochResp>> getAllEpoch(@Valid @RequestBody PageReq req) {
+        return Mono.just(addressService.getAllEpoch(req));
+    }
+
+    @PostMapping("address/getRpPlanByUnlockNumber")
+    public Mono<RespPage<QueryRpPlanByUnlockNumberResp>> getRpPlanByUnlockNumber(@Valid @RequestBody QueryRpPlanByUnlockNumberRequest req) {
+        return Mono.just(addressService.getRpPlanByUnlockNumber(req));
     }
 
 }

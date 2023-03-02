@@ -5,6 +5,7 @@ import com.platon.browser.exception.ConfigLoadingException;
 import com.platon.contracts.ppos.*;
 import com.platon.protocol.Web3j;
 import com.platon.protocol.Web3jService;
+import com.platon.protocol.admin.Admin;
 import com.platon.protocol.http.HttpService;
 import com.platon.protocol.websocket.WebSocketService;
 import lombok.Getter;
@@ -118,13 +119,17 @@ public class RetryableClient {
                     } catch (ConnectException e) {
                         log.error("Websocket地址({})无法连通:", protocol.getHead() + address, e);
                     }
-                } else if (protocol == Web3jProtocolEnum.HTTP) {
+                } else if (protocol == Web3jProtocolEnum.HTTP || protocol == Web3jProtocolEnum.HTTPS) {
                     service = new HttpService(protocol.getHead() + address);
                 } else {
                     log.error("Web3j连接协议[{}]不合法!", protocol.getHead());
                     System.exit(1);
                 }
-                Web3jWrapper web3j = Web3jWrapper.builder().address(protocol.getHead() + address).web3jService(service).web3j(Web3j.build(service)).build();
+                Web3jWrapper web3j = Web3jWrapper.builder().address(protocol.getHead() + address)
+                        .web3jService(service)
+                        .web3j(Web3j.build(service))
+                        .admin(Admin.build(service))
+                        .build();
                 web3jWrappers.add(web3j);
             });
             if (web3jWrappers.isEmpty()) throw new ConfigLoadingException("没有可用Web3j实例!");

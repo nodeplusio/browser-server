@@ -1,0 +1,33 @@
+index_patterns:
+  - "*_log_origin"
+settings:
+  index:
+    max_result_window: '1000000000'
+    number_of_shards: '5'
+    number_of_replicas: '1'
+mappings:
+  properties:
+    removed:
+      type: boolean
+    blockNumber:
+      type: long
+    logIndex:
+      type: long
+    transactionIndex:
+      type: long
+    transactionHash:
+      type: keyword
+    blockHash:
+      type: keyword
+    address:
+      type: keyword
+    type:
+      type: keyword
+    data:
+      norms: false
+      index: false
+      type: text
+      doc_values: false
+    topics:
+      type: keyword
+

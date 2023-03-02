@@ -10,10 +10,13 @@ import com.platon.browser.request.newtransaction.TransactionDetailsReq;
 import com.platon.browser.request.newtransaction.TransactionListByAddressRequest;
 import com.platon.browser.request.newtransaction.TransactionListByBlockRequest;
 import com.platon.browser.request.staking.QueryClaimByStakingReq;
+import com.platon.browser.request.staking.QueryDelegationLogByNodeIdReq;
+import com.platon.browser.request.staking.TransactionListByValueSelectiveReq;
 import com.platon.browser.response.BaseResp;
 import com.platon.browser.response.RespPage;
 import com.platon.browser.response.account.AccountDownload;
 import com.platon.browser.response.staking.QueryClaimByStakingResp;
+import com.platon.browser.response.staking.TransactionDetail;
 import com.platon.browser.response.transaction.QueryClaimByAddressResp;
 import com.platon.browser.response.transaction.TransactionDetailsResp;
 import com.platon.browser.response.transaction.TransactionListResp;
@@ -164,6 +167,36 @@ public class TransactionController {
     @PostMapping("transaction/queryClaimByStaking")
     public Mono<RespPage<QueryClaimByStakingResp>> queryClaimByStaking(@Valid @RequestBody QueryClaimByStakingReq req) {
         return Mono.just(transactionService.queryClaimByStaking(req));
+    }
+
+    /**
+     * 2.3 历史委托列表
+     *
+     * @param req
+     */
+    @PostMapping("transaction/queryDelegationLogByNodeId")
+    public Mono<RespPage<TransactionDetail>> queryDelegationLogByNodeId(@Valid @RequestBody QueryDelegationLogByNodeIdReq req) {
+        return Mono.just(transactionService.queryDelegationLogByNodeId(req));
+    }
+
+    /**
+     * 2.4 大额交易的列表
+     *
+     * @param req
+     */
+    @PostMapping("transaction/transactionListByValueSelective")
+    public Mono<RespPage<TransactionDetail>> transactionListByValueSelective(@Valid @RequestBody TransactionListByValueSelectiveReq req) {
+        return Mono.just(transactionService.transactionListByValueSelective(req));
+    }
+
+    /**
+     * 2.5 分页查交易
+     *
+     * @param req
+     */
+    @PostMapping("transaction/transactionListWithValue")
+    public Mono<RespPage<TransactionDetail>> transactionListWithValue(@Valid @RequestBody PageReq req) {
+        return Mono.just(transactionService.transactionListWithValue(req));
     }
 
 }

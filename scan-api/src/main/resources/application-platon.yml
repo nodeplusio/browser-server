@@ -11,12 +11,9 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://192.168.9.191:3306/scan_${profile}?useUnicode=true&characterEncoding=utf-8&useSSL=false&useTimezone=true&serverTimezone=GMT%2B8&allowMultiQueries=true
-    # 使用p6spy监控SQL
-    # driver-class-name: com.p6spy.engine.spy.P6SpyDriver
-    # url: jdbc:p6spy:mysql://192.168.9.191:3306/alaya_browser_${profile}?useUnicode=true&characterEncoding=utf-8&useSSL=false&useTimezone=true&serverTimezone=GMT%2B8&allowMultiQueries=true
-    username: ENC(bpshgjWOgn2d+oGmSTBPNA==)
-    password: ENC(bpshgjWOgn2d+oGmSTBPNA==)
+    url: jdbc:mysql://52.220.99.128:3306/scan_${profile}?useUnicode=true&characterEncoding=utf-8&useSSL=false&useTimezone=true&serverTimezone=GMT%2B8&allowMultiQueries=true
+    username: platon_test
+    password: vhZ9BdFuu2sx
     #下面为连接池的补充设置，应用到上面所有数据源中
     #初始化大小，最小，最大
     initialSize: 5
@@ -37,10 +34,13 @@ spring:
     maxPoolPreparedStatementPerConnectionSize: 100
   #Redis键配置
   redis:
-    password: ENC(D4K/Kxv2c2MT7FaaT+ZHQswHs8KvRm6N)
-    cluster:
-      max-redirects: 3
-      nodes: 192.168.9.191:7001,192.168.9.191:7002,192.168.9.191:7003,192.168.9.191:7004,192.168.9.191:7005,192.168.9.191:7006
+    password:
+#    host: 3.0.14.46
+    host: 127.0.0.1
+    port: 6379
+#    cluster:
+#      max-redirects: 3
+#      nodes: 127.0.0.1:6379
     key:
       #最多存储多少条数据
       max-item: 500000
@@ -61,13 +61,17 @@ spring:
   #ES索引配置
   elasticsearch:
     high-level-client:
-      hosts: 192.168.120.103,192.168.120.104,192.168.120.105
+      hosts: 52.220.99.128
+#      hosts: localhost
       port: 9200
       schema: http
-      username: ENC(VME69JEYLfmUXi3KuDQTWA==)
-      password: ENC(A6E/VrNrulxXUK7GSjlmiN7NqxZV5P6o)
+      username: ENC(BLdOQE7zZ9QkMKpo4varhg==)
+      password: ENC(QcRllEkhtfJ+JFXVB0XUG6vNq+da9Wjr)
     index:
       blockIndexName: ${platon.es-namespace}_block
+      blockOriginIndexName: ${platon.es-namespace}_block_origin
+      logOriginIndexName: ${platon.es-namespace}_log_origin
+      transactionOriginIndexName: ${platon.es-namespace}_transaction_origin
       transactionIndexName: ${platon.es-namespace}_transaction
       delegationIndexName: ${platon.es-namespace}_delegation
       nodeOptIndexName: ${platon.es-namespace}_nodeopt
@@ -96,12 +100,19 @@ server:
 logging:
   #日志级别
   level:
-    org.springframework: info
-    com.platon.browser: info
-    com.platon.browser.service: info
-    com.platon.browser.task: info
-    com.platon.browser.client: info
-    com.platon.browser.dao: info
+    root: debug
+    org.springframework: debug
+    com.platon.browser: debug
+    com.platon.browser.service: debug
+    com.platon.browser.task: debug
+    com.platon.browser.client: debug
+    com.platon.browser.dao: debug
+    sun:
+      rmi: info
+    javax:
+      management:
+        remote:
+          rmi: info
 #PlatOn相关配置
 platon:
   # 地址HRP前缀
@@ -113,8 +124,13 @@ platon:
   # Web3j访问地址
   web3j:
     #HTTP或WS
-    protocol: WS
-    addresses: 192.168.9.139:7789
+    protocol: HTTP
+#    protocol: WS
+#    addresses: 192.168.9.139:7789
+#    addresses: openapi2.platon.network/rpc
+#    addresses: 128.199.230.78:6789
+    addresses: 13.229.172.149:6789
+  #    addresses: 34.93.120.9:6790,34.85.65.222:6790
   # 质押节点统计年化率最多取多少个连续周期
   maxSettlePeriodCount4AnnualizedRateStat: 4
   #PlatON初始总发行量(LAT)

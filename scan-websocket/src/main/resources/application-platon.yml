@@ -1,0 +1,194 @@
+#1.1.4配置已经迁移到apollo，以下为完整的配置模板，不想使用apollo，可使用以下配置即可
+#Spring应用配置
+spring:
+  application:
+    name: scan-websocket
+  session:
+    timeout: 1800  #以秒为单位
+  #国际化配置
+  messages.basename: messages
+  #数据源配置
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url: jdbc:mysql://52.220.99.128:3306/scan_${profile}?useUnicode=true&characterEncoding=utf-8&useSSL=false&useTimezone=true&serverTimezone=GMT%2B8&allowMultiQueries=true
+#    username: platon_test
+#    password: vhZ9BdFuu2sx
+    url: jdbc:mysql://127.0.0.1:3306/scan_${profile}?useUnicode=true&characterEncoding=utf-8&useSSL=false&useTimezone=true&serverTimezone=GMT%2B8&allowMultiQueries=true
+    username: root
+    password: 123456
+    #下面为连接池的补充设置，应用到上面所有数据源中
+    #初始化大小，最小，最大
+    initialSize: 5
+    minIdle: 10
+    maxActive: 100
+    # 配置获取连接等待超时的时间
+    maxWait: 60000
+    # 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
+    timeBetweenEvictionRunsMillis: 60000
+    # 配置一个连接在池中最小生存的时间，单位是毫秒
+    minEvictableIdleTimeMillis: 30000
+    validationQuery: select 'x'
+    testWhileIdle: true
+    testOnBorrow: false
+    testOnReturn: false
+    # 打开PSCache，并且指定每个连接上PSCache的大小
+    poolPreparedStatements: true
+    maxPoolPreparedStatementPerConnectionSize: 100
+  #Redis键配置
+  redis:
+    password:
+#    host: 3.0.14.46
+    host: 127.0.0.1
+    port: 6379
+#    cluster:
+#      max-redirects: 3
+#      nodes: 127.0.0.1:6379
+    redisson:
+      address: redis://127.0.0.1:6379
+#      password:
+    key:
+      #最多存储多少条数据
+      max-item: 500000
+      #区块列表
+      blocks: ${platon.redis-namespace}:blocks
+      #交易列表
+      transactions: ${platon.redis-namespace}:transactions
+      #统计信息
+      networkStat: ${platon.redis-namespace}:networkStat
+      #内部转账交易
+      transferTx: ${platon.redis-namespace}:transferTx
+      #erc20交易
+      erc20Tx: ${platon.redis-namespace}:erc20Tx
+      #erc721交易
+      erc721Tx: ${platon.redis-namespace}:erc721Tx
+      #erc1155交易
+      erc1155Tx: ${platon.redis-namespace}:erc1155Tx
+      proxyRequestChannel: proxy:${profile}:requestChannel
+      pushData: ${platon.redis-namespace}:pushData
+
+  #ES索引配置
+  elasticsearch:
+    high-level-client:
+      hosts: 52.220.99.128
+#      hosts: 127.0.0.1
+      port: 9200
+      schema: http
+      username: ENC(BLdOQE7zZ9QkMKpo4varhg==)
+      password: ENC(QcRllEkhtfJ+JFXVB0XUG6vNq+da9Wjr)
+    index:
+      blockIndexName: ${platon.es-namespace}_block
+      blockOriginIndexName: ${platon.es-namespace}_block_origin
+      logOriginIndexName: ${platon.es-namespace}_log_origin
+      transactionOriginIndexName: ${platon.es-namespace}_transaction_origin
+      transactionIndexName: ${platon.es-namespace}_transaction
+      delegationIndexName: ${platon.es-namespace}_delegation
+      nodeOptIndexName: ${platon.es-namespace}_nodeopt
+      delegationRewardIndexName: ${platon.es-namespace}_delegation_reward
+      transferTxIndexName: ${platon.es-namespace}_transfer_tx
+      erc20TxIndexName: ${platon.es-namespace}_erc20_tx
+      erc721TxIndexName: ${platon.es-namespace}_erc721_tx
+      erc1155TxIndexName: ${platon.es-namespace}_erc1155_tx
+# MyBatis配置（注意：一定要对应mapper映射xml文件的所在路径）
+mybatis:
+  mapper-locations: classpath*:mapper/*.xml,classpath*:custommapper/*.xml
+  # 实体类别名配置（注意：对应实体类的路径）
+  type-aliases-package: com.platon.browser.dao.entity
+profile: platon
+#性能配置
+server:
+  port: 40011
+  tomcat:
+    max-connections: 20000
+    threads:
+      max: 2000
+      min-spare: 800
+  servlet:
+    context-path: /browser-websocket
+#日志配置
+logging:
+  #日志级别
+  level:
+    root: debug
+    org.springframework: debug
+    com.platon.browser: debug
+    com.platon.browser.service: debug
+    com.platon.browser.task: debug
+    com.platon.browser.client: debug
+    com.platon.browser.dao: debug
+    sun:
+      rmi: info
+    javax:
+      management:
+        remote:
+          rmi: info
+#PlatOn相关配置
+platon:
+  # 地址HRP前缀
+  addressPrefix: lat
+  # 金额显示单位
+  valueUnit: LAT
+  # 交易输入参数并行解码线程数
+  txLogDecodeThreadNum: 200
+  # Web3j访问地址
+  web3j:
+    #HTTP或WS
+    protocol: HTTP
+#    protocol: WS
+#    addresses: 192.168.9.139:7789
+#    addresses: openapi2.platon.network/rpc
+#    addresses: 128.199.230.78:6789
+    addresses: 13.229.172.149:6789
+  #    addresses: 34.93.120.9:6790,34.85.65.222:6790
+  # 质押节点统计年化率最多取多少个连续周期
+  maxSettlePeriodCount4AnnualizedRateStat: 4
+  #PlatON初始总发行量(LAT)
+  initIssueAmount: 10000000000
+  #每年固定增发比例
+  addIssueRate: 0.025
+  #每年增发分配给激励池的比例
+  incentiveRateFromIssue: 0.8
+  #每个共识轮中回退多少个块是选举下一轮验证人的时机
+  electionBackwardBlockCount: 20
+  #10年内计算士基金会向激励池填充额度: <第几年-补贴金额(LAT)>
+  foundationSubsidies: {
+    '1':62215742.00000000,
+    '2':55965742.00000000,
+    '3':49559492.00000000,
+    '4':42993086.00000000,
+    '5':36262520.00000000,
+    '6':29363689.00000000,
+    '7':22292388.00000000,
+    '8':15044304.00000000,
+    '9':7615018.00000000
+  }
+  # 初始内置节点默认质押金额(LAT)
+  defaultStakingLockedAmount: 150000
+  #区块最大Gas限制
+  maxBlockGasLimit: 201600000
+  #提案url参数模板
+  proposalUrlTemplate: https://github.com/PlatONnetwork/PIPs/blob/master/PIPs/PIP-%s.md
+  #keysBase网址
+  keyBase: https://keybase.io/
+  #keyBase api
+  keyBaseApi: _/api/1.0/user/lookup.json?key_suffix=
+  #链id
+  chainId: 210425
+  #Redis命名空间
+  redis-namespace: browser:${profile}
+  #Es索引命名空间
+  es-namespace: browser_${profile}
+  #0出块等待的循环访问时间(秒)
+  zeroBlockNumber:
+    wait-time: 60
+recaptchaUrl: https://recaptcha.net/recaptcha/api/siteverify?secret=6Lf8KLcUAAAAAPyHZfa7oeWjdMSyvgDHUUeYf01Z&response=%s
+limit:
+  num: 10
+ws.sendExecutorSize: 20
+output:
+  file:
+    url: /var/tmp
+apollo:
+  bootstrap:
+    # 是否开启 Apollo
+    enabled: false

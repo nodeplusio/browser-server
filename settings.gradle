@@ -10,4 +10,5 @@ include 'scan-common'
 include 'scan-generator'
 include 'scan-service'
 include 'scan-job'
+include 'scan-websocket'
 

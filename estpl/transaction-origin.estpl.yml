@@ -1,0 +1,51 @@
+index_patterns:
+  - "*_transaction_origin"
+settings:
+  index:
+    max_result_window: '1000000000'
+    number_of_shards: '5'
+    number_of_replicas: '1'
+mappings:
+  properties:
+    hash:
+      type: keyword
+    nonce:
+      type: keyword
+    blockHash:
+      type: keyword
+    blockNumber:
+      type: long
+    transactionIndex:
+      type: long
+    transactionHash:
+      type: keyword
+    from:
+      type: keyword
+    to:
+      type: keyword
+    value:
+      type: keyword
+    gasPrice:
+      type: long
+    gas:
+      type: long
+    input:
+      norms: false
+      index: false
+      type: text
+      doc_values: false
+    creates:
+      type: keyword
+    publicKey:
+      type: keyword
+    raw:
+      type: keyword
+    r:
+      type: keyword
+    s:
+      type: keyword
+    v:
+      type: long
+    chainId:
+      type: long
+

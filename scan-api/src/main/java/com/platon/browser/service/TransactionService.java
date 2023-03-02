@@ -5,6 +5,7 @@ import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
 import com.platon.browser.bean.CustomStaking;
 import com.platon.browser.bean.keybase.KeyBaseUserInfo;
 import com.platon.browser.cache.TransactionCacheDto;
@@ -13,10 +14,7 @@ import com.platon.browser.config.DownFileCommon;
 import com.platon.browser.constant.Browser;
 import com.platon.browser.dao.custommapper.CustomToken1155InventoryMapper;
 import com.platon.browser.dao.entity.*;
-import com.platon.browser.dao.mapper.AddressMapper;
-import com.platon.browser.dao.mapper.ProposalMapper;
-import com.platon.browser.dao.mapper.StakingMapper;
-import com.platon.browser.dao.mapper.TokenInventoryMapper;
+import com.platon.browser.dao.mapper.*;
 import com.platon.browser.elasticsearch.dto.Block;
 import com.platon.browser.elasticsearch.dto.DelegationReward;
 import com.platon.browser.elasticsearch.dto.DelegationReward.Extra;
@@ -36,9 +34,12 @@ import com.platon.browser.request.newtransaction.TransactionDetailsReq;
 import com.platon.browser.request.newtransaction.TransactionListByAddressRequest;
 import com.platon.browser.request.newtransaction.TransactionListByBlockRequest;
 import com.platon.browser.request.staking.QueryClaimByStakingReq;
+import com.platon.browser.request.staking.QueryDelegationLogByNodeIdReq;
+import com.platon.browser.request.staking.TransactionListByValueSelectiveReq;
 import com.platon.browser.response.RespPage;
 import com.platon.browser.response.account.AccountDownload;
 import com.platon.browser.response.staking.QueryClaimByStakingResp;
+import com.platon.browser.response.staking.TransactionDetail;
 import com.platon.browser.response.transaction.*;
 import com.platon.browser.service.elasticsearch.EsDelegationRewardRepository;
 import com.platon.browser.service.elasticsearch.EsTransactionRepository;
@@ -63,6 +64,7 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 交易方法逻辑实现
@@ -78,7 +80,7 @@ public class TransactionService {
     private final Logger logger = LoggerFactory.getLogger(TransactionService.class);
 
     @Resource
-    private EsTransactionRepository ESTransactionRepository;
+    private EsTransactionRepository eSTransactionRepository;
 
     @Resource
     private EsDelegationRewardRepository ESDelegationRewardRepository;
@@ -97,6 +99,12 @@ public class TransactionService {
 
     @Resource
     private CustomToken1155InventoryMapper customToken1155InventoryMapper;
+
+    @Resource
+    private TxBakMapper txBakMapper;
+
+    @Resource
+    private DelegationLogMapper delegationLogMapper;
 
     @Resource
     private StatisticCacheService statisticCacheService;
@@ -148,7 +156,7 @@ public class TransactionService {
         constructor.setResult(new String[]{"hash", "time", "status", "from", "to", "value", "num", "type", "toType", "cost", "failReason"});
         /** 根据区块号和类型分页查询交易信息 */
         try {
-            items = this.ESTransactionRepository.search(constructor, Transaction.class, req.getPageNo(), req.getPageSize());
+            items = this.eSTransactionRepository.search(constructor, Transaction.class, req.getPageNo(), req.getPageSize());
         } catch (Exception e) {
             this.logger.error(ERROR_TIPS, e);
             return result;
@@ -175,7 +183,7 @@ public class TransactionService {
         constructor.setUnmappedType("long");
         constructor.setResult(new String[]{"hash", "time", "status", "from", "to", "value", "num", "type", "toType", "cost", "failReason"});
         try {
-            items = this.ESTransactionRepository.search(constructor, Transaction.class, req.getPageNo(), req.getPageSize());
+            items = this.eSTransactionRepository.search(constructor, Transaction.class, req.getPageNo(), req.getPageSize());
         } catch (Exception e) {
             this.logger.error(ERROR_TIPS, e);
             return result;
@@ -240,7 +248,7 @@ public class TransactionService {
         constructor.setUnmappedType("long");
         constructor.setResult(new String[]{"hash", "time", "status", "from", "to", "value", "num", "type", "toType", "cost"});
         try {
-            items = this.ESTransactionRepository.search(constructor, Transaction.class, 1, 30000);
+            items = this.eSTransactionRepository.search(constructor, Transaction.class, 1, 30000);
         } catch (Exception e) {
             this.logger.error(ERROR_TIPS, e);
             return accountDownload;
@@ -283,7 +291,7 @@ public class TransactionService {
         /** 根据hash查询具体的交易数据 */
         Transaction transaction = null;
         try {
-            transaction = this.ESTransactionRepository.get(req.getTxHash(), Transaction.class);
+            transaction = this.eSTransactionRepository.get(req.getTxHash(), Transaction.class);
         } catch (Exception e) {
             this.logger.error(ERROR_TIPS, e);
             return resp;
@@ -362,7 +370,7 @@ public class TransactionService {
                 constructor.setResult(new String[]{"hash"});
                 ESResult<Transaction> first = new ESResult<>();
                 try {
-                    first = this.ESTransactionRepository.search(constructor, Transaction.class, 1, 1);
+                    first = this.eSTransactionRepository.search(constructor, Transaction.class, 1, 1);
                 } catch (Exception e) {
                     this.logger.error("获取交易错误。", e);
                     return resp;
@@ -381,7 +389,7 @@ public class TransactionService {
             constructor.setResult(new String[]{"hash"});
             ESResult<Transaction> last = new ESResult<>();
             try {
-                last = this.ESTransactionRepository.search(constructor, Transaction.class, 1, 1);
+                last = this.eSTransactionRepository.search(constructor, Transaction.class, 1, 1);
             } catch (Exception e) {
                 this.logger.error("获取交易错误。", e);
                 return resp;
@@ -1029,6 +1037,69 @@ public class TransactionService {
         }
         RespPage<QueryClaimByStakingResp> result = new RespPage<>();
         result.init(queryClaimByStakingResps, delegationRewards.getTotal(), delegationRewards.getTotal(), 0l);
+        return result;
+    }
+
+    public RespPage<TransactionDetail> queryDelegationLogByNodeId(QueryDelegationLogByNodeIdReq req) {
+        DelegationLogExample example = new DelegationLogExample();
+        example.setOrderByClause("time");
+        DelegationLogExample.Criteria criteria = example.createCriteria()
+                .andNodeIdEqualTo(req.getNodeId());
+        if (req.getType() != null) {
+            criteria.andTypeEqualTo(req.getType());
+        }
+        PageHelper.startPage(req.getPageNo(), req.getPageSize());
+        Page<DelegationLog> delegationLogs = delegationLogMapper.selectByExample(example);
+        RespPage<TransactionDetail> result = new RespPage<>();
+        if (delegationLogs.isEmpty()) {
+            return result;
+        }
+
+        TxBakExample txBakExample = new TxBakExample();
+        txBakExample.createCriteria().andIdIn(delegationLogs.stream().map(DelegationLog::getId).collect(Collectors.toList()));
+        List<TxBakWithBLOBs> txBakWithBLOBs = txBakMapper.selectByExampleWithBLOBs(txBakExample);
+        result.init(delegationLogs, txBakWithBLOBs.stream().map(TransactionDetail::new).collect(Collectors.toList()));
+        return result;
+    }
+
+    public RespPage<TransactionDetail> transactionListByValueSelective(TransactionListByValueSelectiveReq req) {
+        RespPage<TransactionDetail> result = new RespPage<>();
+        ESQueryBuilderConstructor constructor = new ESQueryBuilderConstructor();
+        constructor.must(new ESQueryBuilders().range("value", req.getValue(), null));
+        ESResult<Transaction> items;
+        constructor.setDesc("seq");
+        constructor.setUnmappedType("long");
+        try {
+            items = this.eSTransactionRepository.search(constructor, Transaction.class, req.getPageNo(), req.getPageSize());
+        } catch (Exception e) {
+            this.logger.error(ERROR_TIPS, e);
+            return result;
+        }
+        List<TransactionDetail> lists = items.getRsData().stream().map(TransactionDetail::new).collect(Collectors.toList());
+        /** 统计交易信息 */
+        Page<?> page = new Page<>(req.getPageNo(), req.getPageSize());
+        result.init(page, lists);
+        result.setTotalCount(items.getTotal());
+        return result;
+    }
+
+    public RespPage<TransactionDetail> transactionListWithValue(PageReq req) {
+        RespPage<TransactionDetail> result = new RespPage<>();
+        ESQueryBuilderConstructor constructor = new ESQueryBuilderConstructor();
+        ESResult<Transaction> items;
+        constructor.setDesc("seq");
+        constructor.setUnmappedType("long");
+        try {
+            items = this.eSTransactionRepository.search(constructor, Transaction.class, req.getPageNo(), req.getPageSize());
+        } catch (Exception e) {
+            this.logger.error(ERROR_TIPS, e);
+            return result;
+        }
+        List<TransactionDetail> lists = items.getRsData().stream().map(TransactionDetail::new).collect(Collectors.toList());
+        /** 统计交易信息 */
+        Page<?> page = new Page<>(req.getPageNo(), req.getPageSize());
+        result.init(page, lists);
+        result.setTotalCount(items.getTotal());
         return result;
     }
 

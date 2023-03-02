@@ -1,6 +1,8 @@
 package com.platon.browser.dao.custommapper;
 
+import com.github.pagehelper.Page;
 import com.platon.browser.bean.CustomRpPlan;
+import com.platon.browser.bean.CustomRpPlanStats;
 import com.platon.browser.dao.entity.RpPlan;
 import org.apache.ibatis.annotations.Param;
 
@@ -11,6 +13,8 @@ import java.util.Set;
 public interface CustomRpPlanMapper {
 
     List<CustomRpPlan> selectAll();
+
+    Page<CustomRpPlanStats> statsAll();
 
     int batchInsertOrUpdateSelective(@Param("list") Set<RpPlan> list, @Param("selective") RpPlan.Column... selective);
 

@@ -42,7 +42,7 @@ public class ReceiptRetryService {
             param.setMethod(RECEIPT_RPC_INTERFACE);
             param.getParams().add(blockNumber);
             ReceiptResult result = platOnClient.getReceiptResult(blockNumber);
-            log.debug("回执结果数:{}", result.getResult().size());
+//            log.debug("回执结果数:{}", result.getResult().size());
             log.debug("处理耗时:{} ms", System.currentTimeMillis() - startTime);
             return result;
         } catch (Exception e) {

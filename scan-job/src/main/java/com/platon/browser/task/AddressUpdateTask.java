@@ -5,6 +5,9 @@ import cn.hutool.core.convert.Convert;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.platon.browser.bean.AddressQty;
+import com.platon.browser.bean.RestrictingBalance;
+import com.platon.browser.client.PlatOnClient;
+import com.platon.browser.client.SpecialApi;
 import com.platon.browser.dao.custommapper.CustomAddressMapper;
 import com.platon.browser.dao.custommapper.StatisticBusinessMapper;
 import com.platon.browser.dao.entity.*;
@@ -16,6 +19,7 @@ import com.platon.browser.task.bean.AddressStatistics;
 import com.platon.browser.utils.AddressUtil;
 import com.platon.browser.utils.AppStatusUtil;
 import com.platon.browser.utils.TaskUtil;
+import com.platon.protocol.core.DefaultBlockParameterName;
 import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.handler.annotation.XxlJob;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -64,6 +69,10 @@ public class AddressUpdateTask {
 
     @Resource
     private TxBakMapper txBakMapper;
+    @Resource
+    private SpecialApi specialApi;
+    @Resource
+    private PlatOnClient platonClient;
 
     /**
      * 用于地址表更新
@@ -182,6 +191,14 @@ public class AddressUpdateTask {
                 hasChange = true;
             }
 
+            try {
+                if (queryBalance(item)) {
+                    hasChange = true;
+                }
+            } catch (Exception e) {
+                log.error("查询余额异常", e);
+            }
+
             if (hasChange) {
                 updateAddressList.add(item);
             }
@@ -190,6 +207,26 @@ public class AddressUpdateTask {
         if (!updateAddressList.isEmpty()) {
             statisticBusinessMapper.batchUpdateFromTask(updateAddressList);
         }
+    }
+    private boolean queryBalance(Address address) throws Exception {
+        boolean result = false;
+        /** 特殊账户余额直接查询链  */
+        if (address.getBalance().compareTo(BigDecimal.valueOf(10000000000L)) > 0) {
+            BigInteger balance = platonClient.getWeb3jWrapper().getWeb3j().platonGetBalance(address.getAddress(), DefaultBlockParameterName.LATEST).send().getBalance();
+            BigDecimal balance1 = new BigDecimal(balance);
+            result = balance1.compareTo(address.getBalance()) != 0;
+            address.setBalance(balance1);
+        } else {
+            List<RestrictingBalance> restrictingBalances = specialApi.getRestrictingBalance(platonClient.getWeb3jWrapper().getWeb3j(), address.getAddress());
+            if (restrictingBalances != null && !restrictingBalances.isEmpty()) {
+                BigDecimal balance = new BigDecimal(restrictingBalances.get(0).getFreeBalance());
+                BigDecimal restrictingBalance = new BigDecimal(restrictingBalances.get(0).getLockBalance().subtract(restrictingBalances.get(0).getPledgeBalance()));
+                result = balance.compareTo(address.getBalance()) != 0 || restrictingBalance.compareTo(address.getRestrictingBalance()) != 0;
+                address.setBalance(balance);
+                address.setRestrictingBalance(restrictingBalance);
+            }
+        }
+        return result;
     }
 
     /**

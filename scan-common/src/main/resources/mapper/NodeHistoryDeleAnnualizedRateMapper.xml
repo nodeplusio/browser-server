@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.platon.browser.dao.mapper.NodeHistoryDeleAnnualizedRateMapper">
+  <resultMap id="BaseResultMap" type="com.platon.browser.dao.entity.NodeHistoryDeleAnnualizedRate">
+    <id column="node_id" jdbcType="VARCHAR" property="nodeId" />
+    <id column="date" jdbcType="TIMESTAMP" property="date" />
+    <result column="dele_annualized_rate_max" jdbcType="DECIMAL" property="deleAnnualizedRateMax" />
+    <result column="dele_annualized_rate_min" jdbcType="DECIMAL" property="deleAnnualizedRateMin" />
+    <result column="dele_annualized_rate_avg" jdbcType="DECIMAL" property="deleAnnualizedRateAvg" />
+    <result column="dele_reward" jdbcType="DECIMAL" property="deleReward" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Base_Column_List">
+    node_id, `date`, dele_annualized_rate_max, dele_annualized_rate_min, dele_annualized_rate_avg, 
+    dele_reward, create_time, update_time
+  </sql>
+  <select id="selectByExample" parameterType="com.platon.browser.dao.entity.NodeHistoryDeleAnnualizedRateExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">
+      distinct
+    </if>
+    <include refid="Base_Column_List" />
+    from node_history_dele_annualized_rate
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null">
+      order by ${orderByClause}
+    </if>
+  </select>
+  <select id="selectByPrimaryKey" parameterType="com.platon.browser.dao.entity.NodeHistoryDeleAnnualizedRateKey" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from node_history_dele_annualized_rate
+    where node_id = #{nodeId,jdbcType=VARCHAR}
+      and `date` = #{date,jdbcType=TIMESTAMP}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="com.platon.browser.dao.entity.NodeHistoryDeleAnnualizedRateKey">
+    delete from node_history_dele_annualized_rate
+    where node_id = #{nodeId,jdbcType=VARCHAR}
+      and `date` = #{date,jdbcType=TIMESTAMP}
+  </delete>
+  <delete id="deleteByExample" parameterType="com.platon.browser.dao.entity.NodeHistoryDeleAnnualizedRateExample">
+    delete from node_history_dele_annualized_rate
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </delete>
+  <insert id="insert" parameterType="com.platon.browser.dao.entity.NodeHistoryDeleAnnualizedRate">
+    insert into node_history_dele_annualized_rate (node_id, `date`, dele_annualized_rate_max, 
+      dele_annualized_rate_min, dele_annualized_rate_avg, 
+      dele_reward, create_time, update_time
+      )
+    values (#{nodeId,jdbcType=VARCHAR}, #{date,jdbcType=TIMESTAMP}, #{deleAnnualizedRateMax,jdbcType=DECIMAL}, 
+      #{deleAnnualizedRateMin,jdbcType=DECIMAL}, #{deleAnnualizedRateAvg,jdbcType=DECIMAL}, 
+      #{deleReward,jdbcType=DECIMAL}, #{createTime,jdbcType=TIMESTAMP}, #{updateTime,jdbcType=TIMESTAMP}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.platon.browser.dao.entity.NodeHistoryDeleAnnualizedRate">
+    insert into node_history_dele_annualized_rate
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="nodeId != null">
+        node_id,
+      </if>
+      <if test="date != null">
+        `date`,
+      </if>
+      <if test="deleAnnualizedRateMax != null">
+        dele_annualized_rate_max,
+      </if>
+      <if test="deleAnnualizedRateMin != null">
+        dele_annualized_rate_min,
+      </if>
+      <if test="deleAnnualizedRateAvg != null">
+        dele_annualized_rate_avg,
+      </if>
+      <if test="deleReward != null">
+        dele_reward,
+      </if>
+      <if test="createTime != null">
+        create_time,
+      </if>
+      <if test="updateTime != null">
+        update_time,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="nodeId != null">
+        #{nodeId,jdbcType=VARCHAR},
+      </if>
+      <if test="date != null">
+        #{date,jdbcType=TIMESTAMP},
+      </if>
+      <if test="deleAnnualizedRateMax != null">
+        #{deleAnnualizedRateMax,jdbcType=DECIMAL},
+      </if>
+      <if test="deleAnnualizedRateMin != null">
+        #{deleAnnualizedRateMin,jdbcType=DECIMAL},
+      </if>
+      <if test="deleAnnualizedRateAvg != null">
+        #{deleAnnualizedRateAvg,jdbcType=DECIMAL},
+      </if>
+      <if test="deleReward != null">
+        #{deleReward,jdbcType=DECIMAL},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <select id="countByExample" parameterType="com.platon.browser.dao.entity.NodeHistoryDeleAnnualizedRateExample" resultType="java.lang.Long">
+    select count(*) from node_history_dele_annualized_rate
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </select>
+  <update id="updateByExampleSelective" parameterType="map">
+    update node_history_dele_annualized_rate
+    <set>
+      <if test="record.nodeId != null">
+        node_id = #{record.nodeId,jdbcType=VARCHAR},
+      </if>
+      <if test="record.date != null">
+        `date` = #{record.date,jdbcType=TIMESTAMP},
+      </if>
+      <if test="record.deleAnnualizedRateMax != null">
+        dele_annualized_rate_max = #{record.deleAnnualizedRateMax,jdbcType=DECIMAL},
+      </if>
+      <if test="record.deleAnnualizedRateMin != null">
+        dele_annualized_rate_min = #{record.deleAnnualizedRateMin,jdbcType=DECIMAL},
+      </if>
+      <if test="record.deleAnnualizedRateAvg != null">
+        dele_annualized_rate_avg = #{record.deleAnnualizedRateAvg,jdbcType=DECIMAL},
+      </if>
+      <if test="record.deleReward != null">
+        dele_reward = #{record.deleReward,jdbcType=DECIMAL},
+      </if>
+      <if test="record.createTime != null">
+        create_time = #{record.createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="record.updateTime != null">
+        update_time = #{record.updateTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    <if test="_parameter != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByExample" parameterType="map">
+    update node_history_dele_annualized_rate
+    set node_id = #{record.nodeId,jdbcType=VARCHAR},
+      `date` = #{record.date,jdbcType=TIMESTAMP},
+      dele_annualized_rate_max = #{record.deleAnnualizedRateMax,jdbcType=DECIMAL},
+      dele_annualized_rate_min = #{record.deleAnnualizedRateMin,jdbcType=DECIMAL},
+      dele_annualized_rate_avg = #{record.deleAnnualizedRateAvg,jdbcType=DECIMAL},
+      dele_reward = #{record.deleReward,jdbcType=DECIMAL},
+      create_time = #{record.createTime,jdbcType=TIMESTAMP},
+      update_time = #{record.updateTime,jdbcType=TIMESTAMP}
+    <if test="_parameter != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.platon.browser.dao.entity.NodeHistoryDeleAnnualizedRate">
+    update node_history_dele_annualized_rate
+    <set>
+      <if test="deleAnnualizedRateMax != null">
+        dele_annualized_rate_max = #{deleAnnualizedRateMax,jdbcType=DECIMAL},
+      </if>
+      <if test="deleAnnualizedRateMin != null">
+        dele_annualized_rate_min = #{deleAnnualizedRateMin,jdbcType=DECIMAL},
+      </if>
+      <if test="deleAnnualizedRateAvg != null">
+        dele_annualized_rate_avg = #{deleAnnualizedRateAvg,jdbcType=DECIMAL},
+      </if>
+      <if test="deleReward != null">
+        dele_reward = #{deleReward,jdbcType=DECIMAL},
+      </if>
+      <if test="createTime != null">
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null">
+        update_time = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where node_id = #{nodeId,jdbcType=VARCHAR}
+      and `date` = #{date,jdbcType=TIMESTAMP}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.platon.browser.dao.entity.NodeHistoryDeleAnnualizedRate">
+    update node_history_dele_annualized_rate
+    set dele_annualized_rate_max = #{deleAnnualizedRateMax,jdbcType=DECIMAL},
+      dele_annualized_rate_min = #{deleAnnualizedRateMin,jdbcType=DECIMAL},
+      dele_annualized_rate_avg = #{deleAnnualizedRateAvg,jdbcType=DECIMAL},
+      dele_reward = #{deleReward,jdbcType=DECIMAL},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      update_time = #{updateTime,jdbcType=TIMESTAMP}
+    where node_id = #{nodeId,jdbcType=VARCHAR}
+      and `date` = #{date,jdbcType=TIMESTAMP}
+  </update>
+  <insert id="batchInsert" parameterType="map">
+    <!--
+      WARNING - @mbg.generated
+      This element is automatically generated by MyBatis Generator, do not modify.
+      @project https://github.com/itfsw/mybatis-generator-plugin
+    -->
+    insert into node_history_dele_annualized_rate
+    (node_id, `date`, dele_annualized_rate_max, dele_annualized_rate_min, dele_annualized_rate_avg, 
+      dele_reward, create_time, update_time)
+    values
+    <foreach collection="list" item="item" separator=",">
+      (#{item.nodeId,jdbcType=VARCHAR}, #{item.date,jdbcType=TIMESTAMP}, #{item.deleAnnualizedRateMax,jdbcType=DECIMAL}, 
+        #{item.deleAnnualizedRateMin,jdbcType=DECIMAL}, #{item.deleAnnualizedRateAvg,jdbcType=DECIMAL}, 
+        #{item.deleReward,jdbcType=DECIMAL}, #{item.createTime,jdbcType=TIMESTAMP}, #{item.updateTime,jdbcType=TIMESTAMP}
+        )
+    </foreach>
+  </insert>
+  <insert id="batchInsertSelective" parameterType="map">
+    <!--
+      WARNING - @mbg.generated
+      This element is automatically generated by MyBatis Generator, do not modify.
+      @project https://github.com/itfsw/mybatis-generator-plugin
+    -->
+    insert into node_history_dele_annualized_rate (
+    <foreach collection="selective" item="column" separator=",">
+      ${column.escapedColumnName}
+    </foreach>
+    )
+    values
+    <foreach collection="list" item="item" separator=",">
+      (
+      <foreach collection="selective" item="column" separator=",">
+        <if test="'node_id'.toString() == column.value">
+          #{item.nodeId,jdbcType=VARCHAR}
+        </if>
+        <if test="'date'.toString() == column.value">
+          #{item.date,jdbcType=TIMESTAMP}
+        </if>
+        <if test="'dele_annualized_rate_max'.toString() == column.value">
+          #{item.deleAnnualizedRateMax,jdbcType=DECIMAL}
+        </if>
+        <if test="'dele_annualized_rate_min'.toString() == column.value">
+          #{item.deleAnnualizedRateMin,jdbcType=DECIMAL}
+        </if>
+        <if test="'dele_annualized_rate_avg'.toString() == column.value">
+          #{item.deleAnnualizedRateAvg,jdbcType=DECIMAL}
+        </if>
+        <if test="'dele_reward'.toString() == column.value">
+          #{item.deleReward,jdbcType=DECIMAL}
+        </if>
+        <if test="'create_time'.toString() == column.value">
+          #{item.createTime,jdbcType=TIMESTAMP}
+        </if>
+        <if test="'update_time'.toString() == column.value">
+          #{item.updateTime,jdbcType=TIMESTAMP}
+        </if>
+      </foreach>
+      )
+    </foreach>
+  </insert>
+</mapper>

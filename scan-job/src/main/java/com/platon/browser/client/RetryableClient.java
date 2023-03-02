@@ -107,7 +107,7 @@ public class RetryableClient {
                     } catch (ConnectException e) {
                         log.error("Websocket地址({})无法连通:", protocol.getHead() + address, e);
                     }
-                } else if (protocol == Web3jProtocolEnum.HTTP) {
+                } else if (protocol == Web3jProtocolEnum.HTTP || protocol == Web3jProtocolEnum.HTTPS) {
                     service = new HttpService(protocol.getHead() + address);
                 } else {
                     log.error("Web3j连接协议[{}]不合法!", protocol.getHead());

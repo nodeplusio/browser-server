@@ -4,28 +4,25 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
-import com.platon.browser.bean.CustomAddressDetail;
-import com.platon.browser.bean.DlLock;
-import com.platon.browser.bean.LockDelegate;
-import com.platon.browser.bean.RestrictingBalance;
+import com.platon.browser.bean.*;
 import com.platon.browser.client.PlatOnClient;
 import com.platon.browser.client.SpecialApi;
 import com.platon.browser.config.BlockChainConfig;
 import com.platon.browser.dao.custommapper.CustomAddressMapper;
 import com.platon.browser.dao.custommapper.CustomRpPlanMapper;
-import com.platon.browser.dao.entity.NetworkStat;
-import com.platon.browser.dao.entity.RpPlan;
-import com.platon.browser.dao.entity.RpPlanExample;
+import com.platon.browser.dao.entity.*;
+import com.platon.browser.dao.mapper.AddressMapper;
 import com.platon.browser.dao.mapper.RpPlanMapper;
 import com.platon.browser.elasticsearch.dto.Block;
 import com.platon.browser.enums.I18nEnum;
 import com.platon.browser.enums.TokenTypeEnum;
 import com.platon.browser.exception.BusinessException;
+import com.platon.browser.request.PageReq;
 import com.platon.browser.request.address.QueryDetailRequest;
 import com.platon.browser.request.address.QueryRPPlanDetailRequest;
-import com.platon.browser.response.address.DetailsRPPlanResp;
-import com.platon.browser.response.address.QueryDetailResp;
-import com.platon.browser.response.address.QueryRPPlanDetailResp;
+import com.platon.browser.request.address.QueryRpPlanByUnlockNumberRequest;
+import com.platon.browser.response.RespPage;
+import com.platon.browser.response.address.*;
 import com.platon.browser.service.elasticsearch.EsBlockRepository;
 import com.platon.browser.utils.ConvertUtil;
 import com.platon.browser.utils.I18nUtil;
@@ -46,6 +43,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 地址具体逻辑实现方法
@@ -59,6 +57,9 @@ import java.util.List;
 public class AddressService {
 
     private final Logger logger = LoggerFactory.getLogger(AddressService.class);
+
+    @Resource
+    private AddressMapper addressMapper;
 
     @Resource
     private CustomAddressMapper customAddressMapper;
@@ -132,10 +133,7 @@ public class AddressService {
                 logger.error("getBalance error again", e);
             }
         }
-        RpPlanExample rpPlanExample = new RpPlanExample();
-        RpPlanExample.Criteria criteria = rpPlanExample.createCriteria();
-        criteria.andAddressEqualTo(req.getAddress());
-        List<RpPlan> rpPlans = rpPlanMapper.selectByExample(rpPlanExample);
+        List<RpPlan> rpPlans = getRpPlans(req.getAddress());
         /** 有锁仓数据之后就可以返回1 */
         if (rpPlans != null && !rpPlans.isEmpty()) {
             resp.setIsRestricting(1);
@@ -185,6 +183,13 @@ public class AddressService {
         }
         resp.setLockDelegateList(lockDelegateList);
         return resp;
+    }
+
+    private List<RpPlan> getRpPlans(String address) {
+        RpPlanExample rpPlanExample = new RpPlanExample();
+        RpPlanExample.Criteria criteria = rpPlanExample.createCriteria();
+        criteria.andAddressEqualTo(address);
+        return rpPlanMapper.selectByExample(rpPlanExample);
     }
 
     /**
@@ -314,4 +319,55 @@ public class AddressService {
         return resp;
     }
 
+    public RespPage<QueryAddressValueResp> queryAddressValue(PageReq req) {
+        AddressExample addressExample = new AddressExample();
+        addressExample.setOrderByClause("balance desc");
+        PageHelper.startPage(req.getPageNo(), req.getPageSize());
+        Page<Address> addressList = addressMapper.pageByExample(addressExample);
+
+        RespPage<QueryAddressValueResp> result = new RespPage<>();
+        result.init(addressList, addressList.getResult().stream()
+                .map(address -> new QueryAddressValueResp(address, getRpPlans(address.getAddress())))
+                .collect(Collectors.toList()));
+        return result;
+    }
+
+    public QueryAddressValueAllColsResp queryAddressValueAllCols(PageReq req) {
+        AddressExample addressExample = new AddressExample();
+        addressExample.setOrderByClause("balance desc");
+        PageHelper.startPage(req.getPageNo(), req.getPageSize());
+        Page<Address> addressList = addressMapper.pageByExampleWithBLOBs(addressExample);
+
+        QueryAddressValueAllColsResp result = new QueryAddressValueAllColsResp();
+        result.setResult(addressList.getResult().stream().map(AddressValueAllCols::new)
+                .collect(Collectors.toList()));
+        result.setCurrentPage(addressList.getPageNum());
+        result.setTotalPages(addressList.getPages());
+        result.setTotalCount(addressList.getTotal());
+        return result;
+    }
+
+    public RespPage<QueryAllEpochResp> getAllEpoch(PageReq req) {
+        PageHelper.startPage(req.getPageNo(), req.getPageSize());
+        Page<CustomRpPlanStats> rpPlans = customRpPlanMapper.statsAll();
+        RespPage<QueryAllEpochResp> respPage = new RespPage<>();
+        respPage.init(rpPlans, rpPlans.getResult().stream()
+                .map(QueryAllEpochResp::new)
+                .collect(Collectors.toList()));
+        return respPage;
+    }
+
+    public RespPage<QueryRpPlanByUnlockNumberResp> getRpPlanByUnlockNumber(QueryRpPlanByUnlockNumberRequest req) {
+        RpPlanExample rpPlanExample = new RpPlanExample();
+        RpPlanExample.Criteria criteria = rpPlanExample.createCriteria();
+        criteria.andNumberEqualTo(req.getUnlockNumber());
+        criteria.andEpochEqualTo(req.getEpoch());
+        PageHelper.startPage(req.getPageNo(), req.getPageSize());
+        Page<RpPlan> rpPlans = rpPlanMapper.selectByExample(rpPlanExample);
+               RespPage<QueryRpPlanByUnlockNumberResp> respPage = new RespPage<>();
+        respPage.init(rpPlans, rpPlans.getResult().stream()
+                .map(QueryRpPlanByUnlockNumberResp::new)
+                .collect(Collectors.toList()));
+        return respPage;
+    }
 }
